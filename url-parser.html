@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>视频链接解析工具 - 抖音/快手/B站直链提取</title>
+<title>视频直链获取工具 - 抖音/快手/B站无水印</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body {
@@ -26,33 +26,81 @@ body {
   backdrop-filter: blur(10px);
 }
 .card-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-.platform-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-.platform-tab {
-  padding: 8px 14px;
-  border-radius: 20px;
+.method-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.method-tab {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
   font-size: 13px;
   cursor: pointer;
   border: 1px solid #2a2a38;
   background: #1a1a24;
+  text-align: center;
   transition: all 0.2s;
 }
-.platform-tab.active { background: linear-gradient(135deg, #8b5cf6, #ec4899); border-color: transparent; color: #fff; }
-.input-group { margin-bottom: 16px; }
-.input-group label { display: block; font-size: 13px; color: #aaa; margin-bottom: 8px; }
-.input-wrapper { position: relative; }
-.input-wrapper textarea {
+.method-tab.active { background: linear-gradient(135deg, #8b5cf6, #ec4899); border-color: transparent; color: #fff; }
+.method-content { display: none; }
+.method-content.active { display: block; }
+.site-list { display: flex; flex-direction: column; gap: 10px; }
+.site-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px;
+  border-radius: 10px;
+  background: #0f0f17;
+  border: 1px solid #2a2a38;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.site-item:hover { border-color: #8b5cf6; background: rgba(139,92,246,0.08); }
+.site-item:active { transform: scale(0.98); }
+.site-info { flex: 1; }
+.site-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.site-desc { font-size: 12px; color: #888; }
+.site-tag {
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  margin-left: 8px;
+}
+.tag-free { background: rgba(16,185,129,0.15); color: #10b981; }
+.tag-stable { background: rgba(59,130,246,0.15); color: #3b82f6; }
+.tag-fast { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.arrow { color: #8b5cf6; font-size: 18px; margin-left: 10px; }
+.tutorial { font-size: 13px; line-height: 1.8; color: #ccc; }
+.tutorial h4 { font-size: 14px; color: #8b5cf6; margin: 16px 0 8px; }
+.tutorial h4:first-child { margin-top: 0; }
+.tutorial ol { padding-left: 20px; }
+.tutorial li { margin-bottom: 8px; }
+.tutorial code {
+  background: #0f0f17;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #8b5cf6;
+}
+.tip-box {
+  background: rgba(139,92,246,0.08);
+  border-left: 3px solid #8b5cf6;
+  padding: 12px;
+  border-radius: 0 8px 8px 0;
+  margin-top: 16px;
+  font-size: 12px;
+  color: #aaa;
+}
+.url-input-group { margin-bottom: 16px; }
+.url-input-group label { display: block; font-size: 13px; color: #aaa; margin-bottom: 8px; }
+.url-input {
   width: 100%;
-  min-height: 80px;
   padding: 12px;
   border-radius: 10px;
   border: 1px solid #2a2a38;
   background: #0f0f17;
   color: #e0e0e0;
   font-size: 14px;
-  resize: vertical;
-  font-family: inherit;
 }
-.input-wrapper textarea:focus { outline: none; border-color: #8b5cf6; }
+.url-input:focus { outline: none; border-color: #8b5cf6; }
 .btn {
   width: 100%;
   padding: 14px;
@@ -62,44 +110,34 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
 }
 .btn-primary { background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; }
 .btn-primary:active { transform: scale(0.98); }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-.btn-secondary { background: #1a1a24; border: 1px solid #2a2a38; color: #aaa; }
-.result-card { display: none; }
-.result-card.show { display: block; }
-.result-item { margin-bottom: 12px; }
-.result-item label { font-size: 12px; color: #888; display: block; margin-bottom: 6px; }
-.result-url {
+.btn-secondary { background: #1a1a24; border: 1px solid #2a2a38; color: #aaa; margin-top: 10px; }
+.result-box {
   background: #0f0f17;
   border: 1px solid #2a2a38;
-  border-radius: 8px;
-  padding: 10px 12px;
+  border-radius: 10px;
+  padding: 12px;
+  margin-top: 12px;
+  display: none;
+}
+.result-box.show { display: block; }
+.result-url {
   font-size: 12px;
   color: #8b5cf6;
   word-break: break-all;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  margin-bottom: 10px;
 }
 .copy-btn {
-  padding: 6px 12px;
+  padding: 8px 16px;
   border-radius: 6px;
   background: #8b5cf6;
   color: #fff;
   border: none;
   font-size: 12px;
   cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
 }
-.copy-btn:active { background: #7c3aed; }
 .video-preview {
   width: 100%;
   border-radius: 10px;
@@ -108,50 +146,6 @@ body {
   aspect-ratio: 9/16;
   max-height: 400px;
 }
-.video-info {
-  display: flex;
-  gap: 12px;
-  margin-top: 12px;
-  flex-wrap: wrap;
-}
-.info-tag {
-  padding: 4px 10px;
-  border-radius: 12px;
-  background: rgba(139,92,246,0.15);
-  color: #8b5cf6;
-  font-size: 11px;
-}
-.loading { text-align: center; padding: 30px; }
-.spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid #2a2a38;
-  border-top-color: #8b5cf6;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 12px;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading p { font-size: 13px; color: #888; }
-.error-msg {
-  background: rgba(239,68,68,0.1);
-  border: 1px solid rgba(239,68,68,0.3);
-  border-radius: 8px;
-  padding: 12px;
-  color: #ef4444;
-  font-size: 13px;
-  margin-bottom: 12px;
-}
-.tips {
-  background: rgba(139,92,246,0.08);
-  border-radius: 10px;
-  padding: 14px;
-  margin-top: 16px;
-}
-.tips h4 { font-size: 13px; color: #8b5cf6; margin-bottom: 8px; }
-.tips ul { list-style: none; }
-.tips li { font-size: 12px; color: #888; padding: 3px 0; padding-left: 16px; position: relative; }
-.tips li::before { content: '•'; position: absolute; left: 0; color: #8b5cf6; }
 .toast {
   position: fixed;
   top: 20px;
@@ -169,125 +163,189 @@ body {
 }
 .toast.show { opacity: 1; }
 .footer { text-align: center; padding: 20px; font-size: 12px; color: #555; }
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: #1a1a24;
+  border: 1px solid #2a2a38;
+  color: #aaa;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 16px;
+  text-decoration: none;
+}
 </style>
 </head>
 <body>
 <div class="container">
+  <a href="index.html" class="back-btn">← 返回舞蹈平台</a>
+
   <div class="header">
-    <h1>🔗 视频链接解析工具</h1>
-    <p>抖音 / 快手 / B站 / 小红书 无水印直链提取</p>
+    <h1>🔗 视频直链获取工具</h1>
+    <p>抖音 / 快手 / B站 / 小红书 无水印视频直链</p>
   </div>
 
   <div class="card">
-    <div class="card-title">📋 粘贴分享链接</div>
-    <div class="platform-tabs">
-      <div class="platform-tab active" data-platform="auto">🔍 自动识别</div>
-      <div class="platform-tab" data-platform="douyin">🎵 抖音</div>
-      <div class="platform-tab" data-platform="kuaishou">⚡ 快手</div>
-      <div class="platform-tab" data-platform="bilibili">📺 B站</div>
-      <div class="platform-tab" data-platform="xhs">📕 小红书</div>
+    <div class="card-title">📋 选择获取方式</div>
+    <div class="method-tabs">
+      <div class="method-tab active" onclick="switchMethod('sites')">🌐 在线解析</div>
+      <div class="method-tab" onclick="switchMethod('manual')">📖 手动教程</div>
+      <div class="method-tab" onclick="switchMethod('direct')">✏️ 已有直链</div>
     </div>
-    <div class="input-group">
-      <label>分享链接或口令（支持直接粘贴完整分享文案）</label>
-      <div class="input-wrapper">
-        <textarea id="urlInput" placeholder="示例：https://v.douyin.com/xxxxxx/ 或 7.77 复制打开抖音，看看..."></textarea>
+
+    <!-- 方式1：在线解析网站 -->
+    <div class="method-content active" id="method-sites">
+      <div class="site-list">
+        <div class="site-item" onclick="openSite('https://caiyundao123.com')">
+          <div class="site-info">
+            <div class="site-name">彩云岛去水印 <span class="site-tag tag-free">免费</span><span class="site-tag tag-stable">稳定</span></div>
+            <div class="site-desc">支持抖音/快手/B站/小红书/YouTube，无水印高清下载</div>
+          </div>
+          <span class="arrow">→</span>
+        </div>
+        <div class="site-item" onclick="openSite('https://www.savefrom.net')">
+          <div class="site-info">
+            <div class="site-name">SaveFrom <span class="site-tag tag-free">免费</span><span class="site-tag tag-fast">国际</span></div>
+            <div class="site-desc">国际知名视频下载工具，支持全球主流平台</div>
+          </div>
+          <span class="arrow">→</span>
+        </div>
+        <div class="site-item" onclick="openSite('https://tool.browser.qq.com')">
+          <div class="site-info">
+            <div class="site-name">QQ浏览器工具 <span class="site-tag tag-free">免费</span></div>
+            <div class="site-desc">腾讯官方工具，支持多平台视频解析下载</div>
+          </div>
+          <span class="arrow">→</span>
+        </div>
+      </div>
+      <div class="tip-box">
+        💡 <strong>微信小程序（手机端推荐）</strong>：微信搜索"去水印"，有大量免费小程序（如秘趣去水印、小青去水印、坤坤去水印等），粘贴抖音链接即可解析，解析后保存到相册，再上传到舞蹈平台。
+      </div>
+      <div class="tip-box" style="margin-top:10px;">
+        📝 使用方法：点击上方任意网站 → 粘贴抖音/快手分享链接 → 解析后下载无水印视频 → 把下载的视频上传到舞蹈平台（上传文件方式），或复制视频直链粘贴到视频URL框
       </div>
     </div>
-    <button class="btn btn-primary" id="parseBtn" onclick="parseUrl()">🚀 开始解析</button>
-  </div>
 
-  <div class="card result-card" id="loadingCard">
-    <div class="loading">
-      <div class="spinner"></div>
-      <p id="loadingText">正在解析，请稍候...</p>
-    </div>
-  </div>
+    <!-- 方式2：手动教程 -->
+    <div class="method-content" id="method-manual">
+      <div class="tutorial">
+        <h4>🎯 方法一：电脑浏览器抓包（100%成功）</h4>
+        <ol>
+          <li>用电脑Chrome/Edge浏览器打开抖音视频页面</li>
+          <li>按 <code>F12</code> 打开开发者工具</li>
+          <li>切换到 <code>Network</code>（网络）标签</li>
+          <li>在筛选框输入 <code>mp4</code> 或 <code>video</code></li>
+          <li>按 <code>F5</code> 刷新页面，然后点击播放视频</li>
+          <li>在请求列表中找到视频文件（类型为media或mp4）</li>
+          <li>右键该请求 → <code>Copy</code> → <code>Copy link address</code></li>
+          <li>复制的链接就是视频直链，粘贴到舞蹈平台使用</li>
+        </ol>
 
-  <div class="card result-card" id="resultCard">
-    <div class="card-title">✅ 解析结果</div>
-    <div id="errorMsg"></div>
-    <div class="result-item">
-      <label>视频直链（无水印）</label>
-      <div class="result-url">
-        <span id="videoUrl">-</span>
-        <button class="copy-btn" onclick="copyText('videoUrl')">复制</button>
+        <h4>📱 方法二：手机端（推荐用在线解析）</h4>
+        <ol>
+          <li>抖音点分享 → 复制链接</li>
+          <li>切换到"🌐 在线解析"标签</li>
+          <li>点击任意解析网站</li>
+          <li>粘贴链接解析，复制无水印直链</li>
+          <li>回到舞蹈平台粘贴使用</li>
+        </ol>
+
+        <h4>💡 方法三：微博存视频（最简单）</h4>
+        <ol>
+          <li>把参考视频发到微博（设为仅自己可见）</li>
+          <li>发布后在视频上<strong>长按</strong>（手机）或<strong>右键</strong>（电脑）</li>
+          <li>选择"复制视频地址"或"复制视频链接"</li>
+          <li>这个链接就是.mp4直链，可以直接用</li>
+        </ol>
+      </div>
+      <div class="tip-box">
+        ⭐ 推荐：电脑抓包方法最稳定，不依赖任何第三方服务，100%成功。手机端建议用微博存视频的方法，最简单。
       </div>
     </div>
-    <div class="result-item" id="audioItem" style="display:none;">
-      <label>音频直链</label>
-      <div class="result-url">
-        <span id="audioUrl">-</span>
-        <button class="copy-btn" onclick="copyText('audioUrl')">复制</button>
+
+    <!-- 方式3：已有直链 -->
+    <div class="method-content" id="method-direct">
+      <div class="url-input-group">
+        <label>粘贴你已经获取到的视频直链（.mp4结尾）</label>
+        <input type="text" class="url-input" id="directUrl" placeholder="https://example.com/video.mp4">
       </div>
-    </div>
-    <div class="result-item" id="coverItem" style="display:none;">
-      <label>封面图</label>
-      <div class="result-url">
-        <span id="coverUrl">-</span>
-        <button class="copy-btn" onclick="copyText('coverUrl')">复制</button>
+      <button class="btn btn-primary" onclick="previewDirect()">▶️ 预览并确认</button>
+      <div class="result-box" id="directResult">
+        <div class="result-url" id="directUrlText"></div>
+        <button class="copy-btn" onclick="copyDirectUrl()">📋 复制直链</button>
+        <video class="video-preview" id="directPreview" controls playsinline webkit-playsinline></video>
       </div>
-    </div>
-    <div class="video-info" id="videoInfo"></div>
-    <video class="video-preview" id="videoPreview" controls playsinline webkit-playsinline></video>
-    <div style="margin-top:16px; display:flex; gap:10px;">
-      <button class="btn btn-secondary" onclick="downloadVideo()">📥 下载视频</button>
-      <button class="btn btn-secondary" onclick="resetAll()">🔄 重新解析</button>
+      <div class="tip-box">
+        💡 确认视频可以正常播放后，点击"复制直链"，然后回到舞蹈平台粘贴到"视频URL"输入框即可。
+      </div>
     </div>
   </div>
 
-  <div class="tips">
-    <h4>💡 使用说明</h4>
-    <ul>
-      <li>抖音/快手：点分享 → 复制链接，粘贴到上方即可</li>
-      <li>B站：直接复制视频页面URL</li>
-      <li>解析成功后，复制"视频直链"可用于舞蹈平台的"视频URL"方式</li>
-      <li>如解析失败，请检查链接是否正确，或换个平台试试</li>
-      <li>本工具仅供学习交流，请勿用于商业用途</li>
-    </ul>
+  <div class="card">
+    <div class="card-title">📌 直链使用说明</div>
+    <div class="tutorial">
+      <ol>
+        <li>获取到视频直链后，回到<strong>舞蹈平台</strong></li>
+        <li>在参考视频区域选择<strong>"🔗 视频URL"</strong>标签</li>
+        <li>把直链粘贴到输入框中</li>
+        <li>上传人物参考图，设置参数</li>
+        <li>点击"一键生成"即可</li>
+      </ol>
+    </div>
   </div>
 
-  <div class="footer">Powered by 多API聚合解析 · 仅供学习交流</div>
+  <div class="footer">视频直链获取工具 · 仅供学习交流 · 请勿用于商业用途</div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-let currentPlatform = 'auto';
+// 切换方式
+function switchMethod(method) {
+  document.querySelectorAll('.method-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.method-content').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('method-' + method).classList.add('active');
+}
 
-// 平台标签切换
-document.querySelectorAll('.platform-tab').forEach(tab => {
-  tab.addEventListener('click', function() {
-    document.querySelectorAll('.platform-tab').forEach(t => t.classList.remove('active'));
-    this.classList.add('active');
-    currentPlatform = this.dataset.platform;
+// 打开解析网站
+function openSite(url) {
+  showToast('正在打开解析网站...');
+  setTimeout(() => {
+    window.open(url, '_blank');
+  }, 500);
+}
+
+// 预览直链
+function previewDirect() {
+  const url = document.getElementById('directUrl').value.trim();
+  if (!url) { showToast('请先粘贴视频直链'); return; }
+  if (!/^https?:\/\/.+/i.test(url)) { showToast('请输入有效的URL（以http://或https://开头）'); return; }
+
+  document.getElementById('directUrlText').textContent = url;
+  document.getElementById('directPreview').src = url;
+  document.getElementById('directResult').classList.add('show');
+  showToast('视频加载中，请稍候...');
+}
+
+// 复制直链
+function copyDirectUrl() {
+  const url = document.getElementById('directUrlText').textContent;
+  if (!url) { showToast('没有可复制的内容'); return; }
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('✅ 直链已复制，去舞蹈平台粘贴吧');
+  }).catch(() => {
+    const input = document.createElement('input');
+    input.value = url;
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand('copy');
+    document.body.removeChild(input);
+    showToast('✅ 直链已复制');
   });
-});
-
-// 从文本中提取URL
-function extractUrl(text) {
-  const urlRegex = /(https?:\/\/[^\s，。！？、]+)/g;
-  const matches = text.match(urlRegex);
-  if (matches && matches.length > 0) return matches[0];
-  // 抖音口令形式
-  const douyinRegex = /(v\.douyin\.com\/[a-zA-Z0-9]+)/;
-  const dm = text.match(douyinRegex);
-  if (dm) return 'https://' + dm[1];
-  return text.trim();
-}
-
-// 自动识别平台
-function detectPlatform(url) {
-  if (url.includes('douyin.com') || url.includes('iesdouyin.com')) return 'douyin';
-  if (url.includes('kuaishou.com') || url.includes('gifshow.com')) return 'kuaishou';
-  if (url.includes('bilibili.com') || url.includes('b23.tv')) return 'bilibili';
-  if (url.includes('xiaohongshu.com') || url.includes('xhslink.com')) return 'xhs';
-  return 'unknown';
-}
-
-// 显示/隐藏卡片
-function showCard(id) {
-  document.querySelectorAll('.result-card').forEach(c => c.classList.remove('show'));
-  document.getElementById(id).classList.add('show');
 }
 
 // Toast提示
@@ -295,211 +353,8 @@ function showToast(msg) {
   const toast = document.getElementById('toast');
   toast.textContent = msg;
   toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 2000);
+  setTimeout(() => toast.classList.remove('show'), 2500);
 }
-
-// 复制文本
-function copyText(elementId) {
-  const text = document.getElementById(elementId).textContent;
-  if (!text || text === '-') { showToast('没有可复制的内容'); return; }
-  navigator.clipboard.writeText(text).then(() => {
-    showToast('已复制到剪贴板');
-  }).catch(() => {
-    const input = document.createElement('input');
-    input.value = text;
-    document.body.appendChild(input);
-    input.select();
-    document.execCommand('copy');
-    document.body.removeChild(input);
-    showToast('已复制到剪贴板');
-  });
-}
-
-// 下载视频
-function downloadVideo() {
-  const url = document.getElementById('videoUrl').textContent;
-  if (!url || url === '-') { showToast('没有视频链接'); return; }
-  const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-  if (isMobile) {
-    showToast('正在准备下载...');
-    fetch(url).then(r => r.blob()).then(blob => {
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = 'video_' + Date.now() + '.mp4';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
-      showToast('视频已开始下载');
-    }).catch(() => {
-      window.open(url, '_blank');
-      showToast('已在新窗口打开，长按可保存');
-    });
-  } else {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'video_' + Date.now() + '.mp4';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    showToast('视频已开始下载');
-  }
-}
-
-// 重置
-function resetAll() {
-  document.getElementById('urlInput').value = '';
-  document.querySelectorAll('.result-card').forEach(c => c.classList.remove('show'));
-  document.getElementById('errorMsg').innerHTML = '';
-  document.getElementById('videoUrl').textContent = '-';
-  document.getElementById('audioUrl').textContent = '-';
-  document.getElementById('coverUrl').textContent = '-';
-  document.getElementById('audioItem').style.display = 'none';
-  document.getElementById('coverItem').style.display = 'none';
-  document.getElementById('videoInfo').innerHTML = '';
-  document.getElementById('videoPreview').src = '';
-}
-
-// 解析API列表
-const parseAPIs = [
-  { name: 'API1', url: 'https://api.oioweb.cn/api/douyin?url=', platform: 'douyin' },
-  { name: 'API2', url: 'https://api.pearktrue.cn/api/douyin/?url=', platform: 'douyin' },
-  { name: 'API3', url: 'https://api.xjxjy.top/api/dy.php?url=', platform: 'douyin' },
-  { name: 'API4', url: 'https://api.gumengya.com/Api/Douyin?url=', platform: 'douyin' },
-];
-
-// 通用解析函数
-async function parseWithAPI(apiUrl, videoUrl) {
-  const res = await fetch(apiUrl + encodeURIComponent(videoUrl));
-  if (!res.ok) throw new Error('API请求失败: ' + res.status);
-  const data = await res.json();
-  return data;
-}
-
-// 从API响应中提取视频URL
-function extractVideoUrl(data) {
-  // 尝试多种常见的响应格式
-  if (data.data && data.data.url) return data.data.url;
-  if (data.data && data.data.video_url) return data.data.video_url;
-  if (data.data && data.data.playurl) return data.data.playurl;
-  if (data.data && data.data.play_addr) return data.data.play_addr;
-  if (data.url) return data.url;
-  if (data.video_url) return data.video_url;
-  if (data.playurl) return data.playurl;
-  if (data.result && data.result.url) return data.result.url;
-  if (data.data && Array.isArray(data.data) && data.data[0] && data.data[0].url) return data.data[0].url;
-  return null;
-}
-
-// 主解析函数
-async function parseUrl() {
-  const input = document.getElementById('urlInput').value.trim();
-  if (!input) { showToast('请先粘贴分享链接'); return; }
-
-  const videoUrl = extractUrl(input);
-  let platform = currentPlatform;
-  if (platform === 'auto') {
-    platform = detectPlatform(videoUrl);
-  }
-
-  if (platform === 'unknown') {
-    showToast('无法识别平台，请手动选择平台');
-    return;
-  }
-
-  const btn = document.getElementById('parseBtn');
-  btn.disabled = true;
-  btn.textContent = '解析中...';
-  showCard('loadingCard');
-  document.getElementById('loadingText').textContent = '正在解析' + getPlatformName(platform) + '视频...';
-
-  let success = false;
-  let errorMsg = '';
-
-  // 根据平台选择API
-  const apis = parseAPIs.filter(api => api.platform === platform || api.platform === 'douyin');
-
-  for (let i = 0; i < apis.length; i++) {
-    try {
-      document.getElementById('loadingText').textContent = `正在尝试第${i+1}个解析接口...`;
-      const data = await parseWithAPI(apis[i].url, videoUrl);
-      const extractedUrl = extractVideoUrl(data);
-
-      if (extractedUrl) {
-        // 解析成功
-        document.getElementById('videoUrl').textContent = extractedUrl;
-        document.getElementById('videoPreview').src = extractedUrl;
-
-        // 尝试提取音频
-        const audioUrl = data.data?.audio_url || data.audio_url || data.data?.music_url || null;
-        if (audioUrl) {
-          document.getElementById('audioUrl').textContent = audioUrl;
-          document.getElementById('audioItem').style.display = 'block';
-        }
-
-        // 尝试提取封面
-        const coverUrl = data.data?.cover || data.cover || data.data?.origin_cover || null;
-        if (coverUrl) {
-          document.getElementById('coverUrl').textContent = coverUrl;
-          document.getElementById('coverItem').style.display = 'block';
-        }
-
-        // 视频信息
-        const info = document.getElementById('videoInfo');
-        info.innerHTML = '';
-        if (data.data?.title || data.title) {
-          info.innerHTML += `<span class="info-tag">📝 ${(data.data.title || data.title).substring(0, 20)}</span>`;
-        }
-        if (data.data?.author || data.author) {
-          info.innerHTML += `<span class="info-tag">👤 ${data.data.author || data.author}</span>`;
-        }
-        info.innerHTML += `<span class="info-tag">🎯 ${getPlatformName(platform)}</span>`;
-        info.innerHTML += `<span class="info-tag">✅ 无水印</span>`;
-
-        document.getElementById('errorMsg').innerHTML = '';
-        showCard('resultCard');
-        success = true;
-        break;
-      } else {
-        errorMsg = '接口返回数据格式异常';
-      }
-    } catch (err) {
-      errorMsg = err.message;
-      console.warn('接口' + apis[i].name + '失败:', err.message);
-    }
-  }
-
-  if (!success) {
-    document.getElementById('errorMsg').innerHTML = `
-      <div class="error-msg">
-        ❌ 解析失败：${errorMsg}<br><br>
-        <strong>解决方案：</strong><br>
-        1. 检查链接是否正确完整<br>
-        2. 尝试手动选择平台类型<br>
-        3. 部分视频可能因隐私设置无法解析<br>
-        4. 可尝试使用其他解析工具
-      </div>
-    `;
-    showCard('resultCard');
-  }
-
-  btn.disabled = false;
-  btn.textContent = '🚀 开始解析';
-}
-
-function getPlatformName(platform) {
-  const names = { douyin: '抖音', kuaishou: '快手', bilibili: 'B站', xhs: '小红书' };
-  return names[platform] || platform;
-}
-
-// 支持回车解析
-document.getElementById('urlInput').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    parseUrl();
-  }
-});
 </script>
 </body>
 </html>
