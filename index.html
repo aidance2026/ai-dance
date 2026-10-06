@@ -1048,20 +1048,34 @@ function updateCost() {
 
 // ============ Catbox上传 ============
 async function uploadToCatbox(file) {
+  // 优先使用uguu.se（稳定快速），catbox作为备用
   const fd = new FormData();
-  fd.append('reqtype', 'fileupload');
-  fd.append('fileToUpload', file);
+  fd.append('files[]', file);
   try {
-    const res = await fetch('https://catbox.moe/user/api.php', { method: 'POST', body: fd });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000);
+    const res = await fetch('https://uguu.se/upload.php', { method: 'POST', body: fd, signal: controller.signal });
+    clearTimeout(timeout);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.files && data.files[0] && data.files[0].url) {
+        return data.files[0].url;
+      }
+    }
+  } catch (e) { console.warn('uguu上传失败，尝试备用:', e.message); }
+
+  // 备用：catbox.moe
+  const fd2 = new FormData();
+  fd2.append('reqtype', 'fileupload');
+  fd2.append('fileToUpload', file);
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    const res = await fetch('https://catbox.moe/user/api.php', { method: 'POST', body: fd2, signal: controller.signal });
+    clearTimeout(timeout);
     if (res.ok) { const u = await res.text(); if (u.startsWith('http')) return u.trim(); }
   } catch (e) {}
-  for (const proxy of ['https://corsproxy.io/?', 'https://api.allorigins.win/raw?url=']) {
-    try {
-      const res = await fetch(proxy + encodeURIComponent('https://catbox.moe/user/api.php'), { method: 'POST', body: fd });
-      if (res.ok) { const u = await res.text(); if (u.startsWith('http')) return u.trim(); }
-    } catch (e) { continue; }
-  }
-  throw new Error('视频上传失败，请改用"视频URL"方式');
+  throw new Error('文件上传失败，请改用"视频URL"方式或检查网络');
 }
 
 // ============ 可灵Token ============
