@@ -1108,7 +1108,7 @@ async function uploadToCatbox(file) {
         const fd = new FormData();
         fd.append('files[]', file);
         const controller = new AbortController();
-        const t = setTimeout(() => controller.abort(), 45000);
+        const t = setTimeout(() => controller.abort(), 30000);
         try {
           const res = await fetch('https://uguu.se/upload.php', { method: 'POST', body: fd, signal: controller.signal });
           if (res.ok) {
@@ -1130,7 +1130,7 @@ async function uploadToCatbox(file) {
         fd.append('time', '72h');
         fd.append('fileToUpload', file);
         const controller = new AbortController();
-        const t = setTimeout(() => controller.abort(), 45000);
+        const t = setTimeout(() => controller.abort(), 30000);
         try {
           const res = await fetch('https://litterbox.catbox.moe/resources/internals/api.php', { method: 'POST', body: fd, signal: controller.signal });
           if (res.ok) { const u = await res.text(); if (u.startsWith('http')) return u.trim(); }
@@ -1146,7 +1146,7 @@ async function uploadToCatbox(file) {
         fd.append('reqtype', 'fileupload');
         fd.append('fileToUpload', file);
         const controller = new AbortController();
-        const t = setTimeout(() => controller.abort(), 45000);
+        const t = setTimeout(() => controller.abort(), 30000);
         try {
           const res = await fetch('https://catbox.moe/user/api.php', { method: 'POST', body: fd, signal: controller.signal });
           if (res.ok) { const u = await res.text(); if (u.startsWith('http')) return u.trim(); }
@@ -1161,7 +1161,7 @@ async function uploadToCatbox(file) {
         const fd = new FormData();
         fd.append('file', file);
         const controller = new AbortController();
-        const t = setTimeout(() => controller.abort(), 45000);
+        const t = setTimeout(() => controller.abort(), 30000);
         try {
           const res = await fetch('https://0x0.st', { method: 'POST', body: fd, signal: controller.signal });
           if (res.ok) { const u = await res.text(); if (u.startsWith('http')) return u.trim(); }
@@ -1176,7 +1176,7 @@ async function uploadToCatbox(file) {
         const fd = new FormData();
         fd.append('file', file);
         const controller = new AbortController();
-        const t = setTimeout(() => controller.abort(), 45000);
+        const t = setTimeout(() => controller.abort(), 30000);
         try {
           const res = await fetch('https://file.io', { method: 'POST', body: fd, signal: controller.signal });
           if (res.ok) {
@@ -1194,7 +1194,7 @@ async function uploadToCatbox(file) {
         const fd = new FormData();
         fd.append('file', file);
         const controller = new AbortController();
-        const t = setTimeout(() => controller.abort(), 45000);
+        const t = setTimeout(() => controller.abort(), 30000);
         try {
           const res = await fetch('https://tmpfiles.org/api/v1/upload', { method: 'POST', body: fd, signal: controller.signal });
           if (res.ok) {
@@ -1233,14 +1233,14 @@ async function uploadToCatbox(file) {
   throw new Error(`文件上传失败（${fileSizeMB}MB），已尝试${uploaders.length}个上传服务均失败。\n\n强烈建议：改用"视频URL"方式，直接粘贴抖音/快手/B站视频链接（最稳定，无需上传）。\n\n其他建议：1)压缩视频到20MB以内；2)切换WiFi/流量重试；3)用电脑端操作`);
 }
 
-// ============ 带超时的fetch（防止API卡住） ============
-async function fetchWithTimeout(url, options = {}, timeout = 30000) {
+// ============ 带超时的fetch（手机端优化：更短超时，更快反馈） ============
+async function fetchWithTimeout(url, options = {}, timeout = 20000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   try {
     return await fetch(url, { ...options, signal: controller.signal });
   } catch (err) {
-    if (err.name === 'AbortError') throw new Error('请求超时（30秒），请检查网络或重试');
+    if (err.name === 'AbortError') throw new Error('网络请求超时，请检查网络后重试');
     throw err;
   } finally {
     clearTimeout(timer);
@@ -1372,9 +1372,9 @@ function pollVidu(token, taskId) {
   let elapsed = 0;
   state.pollTimer = setInterval(async () => {
     try {
-      const res = await fetchWithTimeout(VIDU_API + '/tasks/' + taskId, { headers: { 'Authorization': 'Token ' + token } });
+      const res = await fetchWithTimeout(VIDU_API + '/tasks/' + taskId, { headers: { 'Authorization': 'Token ' + token } }, 15000);
       const data = await res.json();
-      elapsed += 5;
+      elapsed += 2;
       if (data.state === 'success') {
         clearInterval(state.pollTimer);
         const url = data.video_url || (data.output && data.output.video_url);
@@ -1385,16 +1385,16 @@ function pollVidu(token, taskId) {
         clearInterval(state.pollTimer);
         throw new Error(data.error || '生成失败');
       } else {
-        const p = Math.min(30 + (elapsed / 600) * 65, 95);
+        const p = Math.min(25 + (elapsed / 180) * 70, 95);
         updateProgress(p, `AI绘制中...（已等待${Math.floor(elapsed)}秒）`);
       }
-      if (elapsed >= 600) { clearInterval(state.pollTimer); throw new Error('生成超时'); }
+      if (elapsed >= 300) { clearInterval(state.pollTimer); throw new Error('生成超时，请重试'); }
     } catch (err) {
       clearInterval(state.pollTimer);
       showToast(err.message || '查询失败', 'error');
       resetBtn();
     }
-  }, 5000);
+  }, 2000);
 }
 
 // ---- 可灵生成 ----
@@ -1464,9 +1464,9 @@ function pollKling(token, taskId) {
     try {
       const res = await fetchWithTimeout(KLING_API + '/videos/motion-control/' + taskId, {
         headers: { 'Authorization': 'Bearer ' + token }
-      });
+      }, 15000);
       const data = await res.json();
-      elapsed += 5;
+      elapsed += 2;
       if (data.code === 0 && data.data) {
         const status = data.data.task_status;
         if (status === 'succeed') {
@@ -1481,18 +1481,18 @@ function pollKling(token, taskId) {
           clearInterval(state.pollTimer);
           throw new Error(data.data.task_status_msg || '生成失败');
         } else {
-          const p = Math.min(30 + (elapsed / 600) * 65, 95);
+          const p = Math.min(25 + (elapsed / 180) * 70, 95);
           const statusText = status === 'processing' ? 'AI绘制视频帧中...' : '任务排队中...';
           updateProgress(p, `${statusText}（已等待${Math.floor(elapsed)}秒）`);
         }
       }
-      if (elapsed >= 600) { clearInterval(state.pollTimer); throw new Error('生成超时'); }
+      if (elapsed >= 300) { clearInterval(state.pollTimer); throw new Error('生成超时，请重试'); }
     } catch (err) {
       clearInterval(state.pollTimer);
       showToast(err.message || '查询失败', 'error');
       resetBtn();
     }
-  }, 5000);
+  }, 2000);
 }
 
 // ============ 火山引擎签名算法 ============
@@ -1600,7 +1600,7 @@ async function generateJimeng(videoUrl) {
         method: 'POST',
         headers: queryHeaders,
         body: queryBody
-      });
+      }, 15000);
       const data = await res.json();
 
       if (data.code !== 10000) {
@@ -1618,18 +1618,18 @@ async function generateJimeng(videoUrl) {
         clearInterval(state.pollTimer);
         throw new Error('任务不存在或已过期');
       } else {
-        const p = Math.min(15 + (elapsed / 300) * 75, 95);
+        const p = Math.min(20 + (elapsed / 120) * 75, 95);
         const statusText = status === 'generating' ? 'AI绘制视频帧中...' : (status === 'in_queue' ? '任务排队中...' : '处理中...');
         updateProgress(p, `${statusText}（已等待${Math.floor(elapsed)}秒）`);
       }
 
-      if (elapsed >= 600) { clearInterval(state.pollTimer); throw new Error('生成超时'); }
+      if (elapsed >= 300) { clearInterval(state.pollTimer); throw new Error('生成超时，请重试'); }
     } catch (err) {
       clearInterval(state.pollTimer);
       showToast(err.message || '查询失败', 'error');
       resetBtn();
     }
-  }, 5000);
+  }, 2000);
 }
 
 // ============ Agnes生成 ============
@@ -1706,7 +1706,7 @@ async function generateAgnes(videoUrl) {
       const queryRes = await fetchWithTimeout(AGNES_API.replace('/v1', '') + '/agnesapi?video_id=' + videoId + '&model_name=agnes-video-2.5', {
         method: 'GET',
         headers: { 'Authorization': 'Bearer ' + apiKey }
-      });
+      }, 15000);
       const queryData = await queryRes.json();
 
       const status = queryData.status;
@@ -1719,19 +1719,19 @@ async function generateAgnes(videoUrl) {
         clearInterval(state.pollTimer);
         throw new Error(queryData.error?.message || '生成失败');
       } else {
-        const p = Math.min(20 + (elapsed / 120) * 70, 95);
+        const p = Math.min(20 + (elapsed / 120) * 75, 95);
         const progress = queryData.progress || 0;
         const statusText = status === 'in_progress' ? `AI绘制视频帧中（${progress}%）...` : '任务排队中...';
         updateProgress(p, `${statusText}（已等待${Math.floor(elapsed)}秒）`);
       }
 
-      if (elapsed >= 300) { clearInterval(state.pollTimer); throw new Error('生成超时'); }
+      if (elapsed >= 300) { clearInterval(state.pollTimer); throw new Error('生成超时，请重试'); }
     } catch (err) {
       clearInterval(state.pollTimer);
       showToast(err.message || '查询失败', 'error');
       resetBtn();
     }
-  }, 3000);
+  }, 2000);
 }
 
 // ============ 结果 ============
