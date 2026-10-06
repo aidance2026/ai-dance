@@ -1078,6 +1078,20 @@ async function uploadToCatbox(file) {
   throw new Error('文件上传失败，请改用"视频URL"方式或检查网络');
 }
 
+// ============ 带超时的fetch（防止API卡住） ============
+async function fetchWithTimeout(url, options = {}, timeout = 30000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error('请求超时（30秒），请检查网络或重试');
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // ============ 可灵Token ============
 async function getKlingToken() {
   const now = Date.now();
@@ -1085,7 +1099,7 @@ async function getKlingToken() {
   const apiKey = document.getElementById('klingApiKey').value.trim();
   const secretKey = document.getElementById('klingSecretKey').value.trim();
   if (!apiKey || !secretKey) throw new Error('请先配置可灵接口密钥和安全密钥');
-  const res = await fetch(KLING_API + '/auth/token', {
+  const res = await fetchWithTimeout(KLING_API + '/auth/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ api_key: apiKey, secret_key: secretKey })
@@ -1146,7 +1160,7 @@ async function generateVidu(videoUrl) {
   updateProgress(15, '正在提交Vidu任务...');
 
   const body = { image_url: state.imageBase64, video_url: videoUrl };
-  let res = await fetch(VIDU_API + '/image2dance', {
+  let res = await fetchWithTimeout(VIDU_API + '/image2dance', {
     method: 'POST',
     headers: { 'Authorization': 'Token ' + token, 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
@@ -1157,7 +1171,7 @@ async function generateVidu(videoUrl) {
     updateProgress(10, '图片需转换，正在上传...');
     const imgUrl = await uploadToCatbox(state.imageFile);
     body.image_url = imgUrl;
-    res = await fetch(VIDU_API + '/image2dance', {
+    res = await fetchWithTimeout(VIDU_API + '/image2dance', {
       method: 'POST',
       headers: { 'Authorization': 'Token ' + token, 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -1174,7 +1188,7 @@ function pollVidu(token, taskId) {
   let elapsed = 0;
   state.pollTimer = setInterval(async () => {
     try {
-      const res = await fetch(VIDU_API + '/tasks/' + taskId, { headers: { 'Authorization': 'Token ' + token } });
+      const res = await fetchWithTimeout(VIDU_API + '/tasks/' + taskId, { headers: { 'Authorization': 'Token ' + token } });
       const data = await res.json();
       elapsed += 5;
       if (data.state === 'success') {
@@ -1228,7 +1242,7 @@ async function generateKling(videoUrl) {
   const prompt = document.getElementById('klingPrompt').value.trim();
   if (prompt) body.prompt = prompt;
 
-  const res = await fetch(KLING_API + '/videos/motion-control', {
+  const res = await fetchWithTimeout(KLING_API + '/videos/motion-control', {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8' },
     body: JSON.stringify(body)
@@ -1240,7 +1254,7 @@ async function generateKling(videoUrl) {
       updateProgress(10, '图片需转换，正在上传...');
       const imgUrl = await uploadToCatbox(state.imageFile);
       body.image_url = imgUrl;
-      const res2 = await fetch(KLING_API + '/videos/motion-control', {
+      const res2 = await fetchWithTimeout(KLING_API + '/videos/motion-control', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8' },
         body: JSON.stringify(body)
@@ -1264,7 +1278,7 @@ function pollKling(token, taskId) {
   let elapsed = 0;
   state.pollTimer = setInterval(async () => {
     try {
-      const res = await fetch(KLING_API + '/videos/motion-control/' + taskId, {
+      const res = await fetchWithTimeout(KLING_API + '/videos/motion-control/' + taskId, {
         headers: { 'Authorization': 'Bearer ' + token }
       });
       const data = await res.json();
@@ -1371,7 +1385,7 @@ async function generateJimeng(videoUrl) {
   const submitQuery = 'Action=CVSync2AsyncSubmitTask&Version=2022-08-31';
   const submitHeaders = await volcSign(ak, sk, 'POST', submitQuery, submitBody);
 
-  const submitRes = await fetch(JIMENG_API + '?' + submitQuery, {
+  const submitRes = await fetchWithTimeout(JIMENG_API + '?' + submitQuery, {
     method: 'POST',
     headers: submitHeaders,
     body: submitBody
@@ -1398,7 +1412,7 @@ async function generateJimeng(videoUrl) {
       const queryQuery = 'Action=CVSync2AsyncGetResult&Version=2022-08-31';
       const queryHeaders = await volcSign(ak, sk, 'POST', queryQuery, queryBody);
 
-      const res = await fetch(JIMENG_API + '?' + queryQuery, {
+      const res = await fetchWithTimeout(JIMENG_API + '?' + queryQuery, {
         method: 'POST',
         headers: queryHeaders,
         body: queryBody
@@ -1482,7 +1496,7 @@ async function generateAgnes(videoUrl) {
     }]
   });
 
-  const res = await fetch(AGNES_API + '/videos', {
+  const res = await fetchWithTimeout(AGNES_API + '/videos', {
     method: 'POST',
     headers: {
       'Authorization': 'Bearer ' + apiKey,
@@ -1505,7 +1519,7 @@ async function generateAgnes(videoUrl) {
   state.pollTimer = setInterval(async () => {
     try {
       const elapsed = (Date.now() - startTime) / 1000;
-      const queryRes = await fetch(AGNES_API.replace('/v1', '') + '/agnesapi?video_id=' + videoId + '&model_name=agnes-video-2.5', {
+      const queryRes = await fetchWithTimeout(AGNES_API.replace('/v1', '') + '/agnesapi?video_id=' + videoId + '&model_name=agnes-video-2.5', {
         method: 'GET',
         headers: { 'Authorization': 'Bearer ' + apiKey }
       });
