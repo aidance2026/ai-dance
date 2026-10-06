@@ -89,6 +89,20 @@ body {
 }
 .text-input:focus { border-color: var(--primary); }
 .text-input::placeholder { color: #555; }
+.parse-link-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px dashed #8b5cf6;
+  background: rgba(139,92,246,0.08);
+  color: #8b5cf6;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.parse-link-btn:hover { background: rgba(139,92,246,0.15); }
+.parse-link-btn:active { transform: scale(0.98); }
 .api-toggle { font-size: 12px; color: var(--primary); cursor: pointer; white-space: nowrap; padding: 8px; }
 .api-hint { font-size: 10px; color: #555; margin-top: 6px; line-height: 1.4; }
 .api-hint a { color: var(--primary); text-decoration: none; }
@@ -537,6 +551,7 @@ body {
     </div>
     <div id="videoUrlSection" style="display:none;">
       <input type="text" class="text-input" id="videoUrlInput" placeholder="粘贴参考视频公网URL（mp4/mov）" onchange="handleVideoUrl(event)">
+      <button class="parse-link-btn" onclick="openUrlParser()">🔗 抖音/快手链接解析 →</button>
     </div>
     <div class="tip-box">💡 人物图与参考视频人物身材比例尽量一致；输出分辨率跟随人物图，建议上传竖版图片。</div>
   </div>
@@ -1023,6 +1038,11 @@ function handleVideoUrl(e) {
   if (!/^https?:\/\/.+/i.test(url)) { showToast('请输入有效的视频URL（以http://或https://开头）', 'error'); e.target.value = ''; return; }
   state.videoUrl = url; state.videoFile = null;
   detectDuration(url);
+}
+
+// 打开链接解析工具
+function openUrlParser() {
+  window.open('url-parser.html', '_blank');
 }
 function switchVideoInput(mode) {
   state.videoInputMode = mode;
