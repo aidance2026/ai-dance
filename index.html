@@ -245,9 +245,52 @@ body {
 }
 .textarea-input:focus { border-color: var(--primary); }
 .textarea-input::placeholder { color: #555; }
+
+/* 访问密码遮罩 */
+.access-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(10,10,15,0.98); z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(10px);
+}
+.access-box {
+  background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+  padding: 36px 28px; width: 90%; max-width: 360px; text-align: center;
+  box-shadow: 0 20px 60px rgba(139,92,246,0.2);
+}
+.access-icon { font-size: 48px; margin-bottom: 12px; }
+.access-title { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+.access-subtitle { font-size: 12px; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+.access-input {
+  width: 100%; background: #0e0e14; border: 1px solid #2e2e40; border-radius: 12px;
+  padding: 14px 16px; font-size: 15px; color: var(--text); outline: none;
+  text-align: center; letter-spacing: 4px; transition: border-color 0.2s;
+}
+.access-input:focus { border-color: var(--primary); }
+.access-btn {
+  width: 100%; margin-top: 14px; padding: 14px; border: none; border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity 0.2s;
+}
+.access-btn:active { opacity: 0.8; }
+.access-error { color: var(--danger); font-size: 12px; margin-top: 10px; min-height: 16px; }
+.access-hint { font-size: 10px; color: #555; margin-top: 16px; line-height: 1.4; }
 </style>
 </head>
 <body>
+<!-- 访问密码验证 -->
+<div class="access-overlay" id="accessOverlay">
+  <div class="access-box">
+    <div class="access-icon">🔐</div>
+    <div class="access-title">访问验证</div>
+    <div class="access-subtitle">本平台需授权访问<br>请输入访问密码进入</div>
+    <input type="password" class="access-input" id="accessPassword" placeholder="请输入访问密码" maxlength="20" onkeypress="if(event.key==='Enter')checkAccess()">
+    <button class="access-btn" onclick="checkAccess()">进入平台</button>
+    <div class="access-error" id="accessError"></div>
+    <div class="access-hint">密码由卖家提供，付费后获取<br>忘记密码请联系卖家</div>
+  </div>
+</div>
+
 <div class="container">
   <div class="header">
     <div class="logo">✨ AI舞蹈模仿</div>
@@ -488,8 +531,32 @@ let state = {
   ffmpegLoaded: false,
 };
 
+// ============ 访问密码配置（卖家修改此处） ============
+const ACCESS_PASSWORD = 'dance2026'; // 访问密码，卖家可自行修改
+
+function checkAccess() {
+  const input = document.getElementById('accessPassword').value.trim();
+  const errorEl = document.getElementById('accessError');
+  if (input === ACCESS_PASSWORD) {
+    localStorage.setItem('access_granted', '1');
+    document.getElementById('accessOverlay').style.display = 'none';
+    errorEl.textContent = '';
+  } else {
+    errorEl.textContent = '密码错误，请重新输入';
+    document.getElementById('accessPassword').value = '';
+    document.getElementById('accessPassword').focus();
+  }
+}
+
 // ============ 初始化 ============
 window.onload = function() {
+  // 检查访问权限
+  if (localStorage.getItem('access_granted') === '1') {
+    document.getElementById('accessOverlay').style.display = 'none';
+  } else {
+    document.getElementById('accessPassword').focus();
+  }
+
   const v = localStorage.getItem('vidu_token');
   if (v) { document.getElementById('viduToken').value = v; updateApiStatus(); }
   const ak = localStorage.getItem('kling_api_key');
