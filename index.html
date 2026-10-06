@@ -69,6 +69,71 @@ body {
   padding: 2px 5px; border-radius: 4px;
 }
 
+/* 国内免费工具导航 */
+.cn-free-section {
+  background: rgba(59,130,246,0.05);
+  border: 1px solid rgba(59,130,246,0.2);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.cn-free-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #3b82f6;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.cn-free-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.cn-free-card {
+  background: var(--card);
+  border: 2px solid rgba(59,130,246,0.3);
+  border-radius: 12px;
+  padding: 14px 10px;
+  cursor: pointer;
+  transition: all 0.25s;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.cn-free-card:hover {
+  border-color: #3b82f6;
+  background: rgba(59,130,246,0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(59,130,246,0.2);
+}
+.cn-free-card:active {
+  transform: scale(0.98);
+}
+.cn-free-icon { font-size: 28px; margin-bottom: 6px; }
+.cn-free-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.cn-free-desc { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+.cn-free-info { font-size: 10px; color: #3b82f6; font-weight: 600; }
+.cn-free-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.cn-free-tip {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(59,130,246,0.15);
+  line-height: 1.5;
+}
+
 /* Card */
 .card {
   background: var(--card); border: 1px solid var(--border); border-radius: 16px;
@@ -476,6 +541,42 @@ body {
       <div class="model-price">¥0.36/秒起</div>
       <div class="model-badge">便宜</div>
     </div>
+  </div>
+
+  <!-- 国内免费工具导航 -->
+  <div class="cn-free-section">
+    <div class="cn-free-title">🇨🇳 国内免费工具（中文界面，无需翻墙，点击直接使用）</div>
+    <div class="cn-free-grid">
+      <div class="cn-free-card" onclick="openCnTool('tongyi')">
+        <div class="cn-free-icon">💃</div>
+        <div class="cn-free-name">通义舞王</div>
+        <div class="cn-free-desc">阿里出品 · 舞蹈模板</div>
+        <div class="cn-free-info">完全免费 · 10秒</div>
+        <div class="cn-free-badge">免费</div>
+      </div>
+      <div class="cn-free-card" onclick="openCnTool('jimeng')">
+        <div class="cn-free-icon">🎭</div>
+        <div class="cn-free-name">即梦AI</div>
+        <div class="cn-free-desc">字节出品 · 动作模仿</div>
+        <div class="cn-free-info">送260积分 · 15秒</div>
+        <div class="cn-free-badge">国产</div>
+      </div>
+      <div class="cn-free-card" onclick="openCnTool('kling')">
+        <div class="cn-free-icon">🔥</div>
+        <div class="cn-free-name">可灵AI</div>
+        <div class="cn-free-desc">快手出品 · 动作控制</div>
+        <div class="cn-free-info">每天6次 · 10秒</div>
+        <div class="cn-free-badge">高质</div>
+      </div>
+      <div class="cn-free-card" onclick="openCnTool('telestudio')">
+        <div class="cn-free-icon">🎬</div>
+        <div class="cn-free-name">TeleStudio</div>
+        <div class="cn-free-desc">中国电信 · 全链路</div>
+        <div class="cn-free-info">限时免费 · 20秒/2K</div>
+        <div class="cn-free-badge">2K</div>
+      </div>
+    </div>
+    <div class="cn-free-tip">💡 以上工具均在国内网站生成，中文界面，无需翻墙；生成后下载视频可直接使用</div>
   </div>
 
   <!-- 密钥配置 -->
@@ -974,6 +1075,28 @@ function selectModel(model) {
   document.getElementById('mixAudioBtn').style.display = cfg.hasSound ? 'none' : 'block';
   updateCost();
   updateApiStatus();
+}
+
+// 打开国内免费工具
+function openCnTool(tool) {
+  const urls = {
+    tongyi: 'https://tongyi.aliyun.com/',
+    jimeng: 'https://jimeng.jianying.com/',
+    kling: 'https://klingai.com/',
+    telestudio: 'https://www.teleai.com.cn/'
+  };
+  const names = {
+    tongyi: '通义舞王（通义千问APP内搜索"通义舞王"）',
+    jimeng: '即梦AI',
+    kling: '可灵AI',
+    telestudio: 'TeleStudio（天翼AI开放平台）'
+  };
+  if (urls[tool]) {
+    showToast('正在打开 ' + names[tool] + '...');
+    setTimeout(() => {
+      window.open(urls[tool], '_blank');
+    }, 500);
+  }
 }
 
 function selectMode(mode) {
