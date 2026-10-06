@@ -193,13 +193,34 @@ body {
 /* Result */
 .result-card { display: none; }
 .result-card.show { display: block; }
-.result-video { width: 100%; border-radius: 12px; background: #000; margin-bottom: 12px; }
+.result-video {
+  width: 100%;
+  aspect-ratio: 9/16;
+  max-height: 70vh;
+  border-radius: 12px;
+  background: #000;
+  margin-bottom: 12px;
+  object-fit: contain;
+}
+.result-video::-webkit-media-controls { display: flex !important; }
+.result-tip {
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+  margin-bottom: 12px;
+  padding: 8px;
+  background: rgba(139,92,246,0.1);
+  border-radius: 8px;
+  display: none;
+}
+.result-tip.show { display: block; }
 .result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .result-btn {
   flex: 1; min-width: 110px; padding: 11px; border-radius: 10px; font-size: 12px;
   font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;
 }
 .result-btn.download { background: linear-gradient(135deg, var(--success), #059669); color: #fff; }
+.result-btn.share { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; }
 .result-btn.mixaudio { background: linear-gradient(135deg, var(--warning), #d97706); color: #fff; }
 .result-btn.new { background: #1a1a24; border: 1px solid #2e2e40; color: #aaa; }
 .result-btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -609,9 +630,11 @@ body {
   <div class="card result-card" id="resultCard">
     <div class="card-title"><span class="icon">✅</span> 生成完成</div>
     <div class="result-info" id="resultInfo"></div>
-    <video class="result-video" id="resultVideo" controls playsinline></video>
+    <div class="result-tip" id="resultTip">📱 手机端：点击视频播放，长按视频可保存到相册</div>
+    <video class="result-video" id="resultVideo" controls playsinline webkit-playsinline preload="auto" x5-playsinline></video>
     <div class="result-actions">
       <button class="result-btn download" onclick="downloadResult()">📥 下载视频</button>
+      <button class="result-btn share" onclick="shareResult()">📤 分享</button>
       <button class="result-btn mixaudio" id="mixAudioBtn" onclick="mixAudio()" style="display:none;">🎵 混合原声</button>
       <button class="result-btn new" onclick="resetAll()">🔄 重新生成</button>
     </div>
@@ -1611,20 +1634,98 @@ function updateProgress(p, text) {
   document.getElementById('progressText').textContent = text;
 }
 function showResult(url, info) {
-  document.getElementById('resultVideo').src = url;
+  const v = document.getElementById('resultVideo');
+  v.src = url;
+  v.load();
+  // 视频加载失败时显示提示
+  v.onerror = function() {
+    document.getElementById('resultTip').textContent = '⚠️ 视频加载失败，请点击"下载视频"保存后观看，或刷新页面重试';
+    document.getElementById('resultTip').classList.add('show');
+  };
+  v.onloadeddata = function() {
+    document.getElementById('resultTip').classList.add('show');
+  };
   document.getElementById('resultInfo').textContent = info;
   document.getElementById('resultCard').classList.add('show');
   document.getElementById('progressCard').classList.remove('show');
   resetBtn();
   setGeneratingUI(false);
   showToast('生成完成！', 'success');
-  document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+  // 延迟滚动，确保元素已渲染
+  setTimeout(() => {
+    document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 300);
 }
+
+// ============ 下载视频（兼容手机端） ============
 function downloadResult() {
   const v = document.getElementById('resultVideo');
-  const a = document.createElement('a');
-  a.href = v.src; a.download = 'ai_dance_' + Date.now() + '.mp4';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  const url = v.src || state.resultVideoUrl;
+  if (!url) { showToast('视频还未生成', 'error'); return; }
+
+  // 检测是否为移动端
+  const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    // 手机端：尝试用fetch下载blob，再触发下载
+    showToast('正在准备下载...');
+    fetch(url)
+      .then(res => res.blob())
+      .then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = 'ai_dance_' + Date.now() + '.mp4';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+        showToast('视频已开始下载，长按可保存到相册', 'success');
+      })
+      .catch(() => {
+        // fetch失败，直接打开新窗口
+        window.open(url, '_blank');
+        showToast('已在新窗口打开视频，长按可保存', 'success');
+      });
+  } else {
+    // 电脑端：直接下载
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ai_dance_' + Date.now() + '.mp4';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('视频已开始下载', 'success');
+  }
+}
+
+// ============ 分享功能 ============
+function shareResult() {
+  const url = state.resultVideoUrl;
+  if (!url) { showToast('视频还未生成', 'error'); return; }
+
+  // 优先使用原生分享API
+  if (navigator.share) {
+    navigator.share({
+      title: 'AI舞蹈模仿视频',
+      text: '快来看看我用AI生成的舞蹈模仿视频！',
+      url: url
+    }).catch(() => {});
+  } else {
+    // 复制链接到剪贴板
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('视频链接已复制，可粘贴分享', 'success');
+    }).catch(() => {
+      // 降级方案：弹出输入框让用户手动复制
+      const input = document.createElement('input');
+      input.value = url;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+      showToast('视频链接已复制', 'success');
+    });
+  }
 }
 
 // ============ Vidu音频混合 ============
