@@ -434,6 +434,13 @@ body {
       <div class="model-price">¥0.4/秒</div>
       <div class="model-badge">国产</div>
     </div>
+    <div class="model-card" data-model="agnes" onclick="selectModel('agnes')">
+      <div class="model-icon">✨</div>
+      <div class="model-name">Agnes 2.5</div>
+      <div class="model-desc">视频参考</div>
+      <div class="model-price">¥0.36/秒起</div>
+      <div class="model-badge">便宜</div>
+    </div>
   </div>
 
   <!-- 密钥配置 -->
@@ -474,6 +481,14 @@ body {
           <span class="api-toggle" onclick="togglePw('jimengSK')">👁</span>
         </div>
         <div class="api-hint">火山引擎密钥，用于签名鉴权。<a href="https://console.volcengine.com/iam/keymanage/" target="_blank">没有密钥？点此注册获取 →</a></div>
+      </div>
+      <!-- Agnes -->
+      <div id="agnesApi" class="api-config-block" style="display:none;">
+        <div class="api-row">
+          <input type="password" class="text-input" id="agnesKey" placeholder="Agnes API Key">
+          <span class="api-toggle" onclick="togglePw('agnesKey')">👁</span>
+        </div>
+        <div class="api-hint">国际站API，支持视频参考生成。<a href="https://agnes-ai.com/" target="_blank">没有密钥？点此注册获取 →</a></div>
       </div>
     </div>
   </div>
@@ -639,12 +654,20 @@ const MODELS = {
     minDuration: 2,
     maxDuration: 30,
     hasSound: false,
+  },
+  agnes: {
+    name: 'Agnes 2.5 视频参考',
+    rate: 0.36,
+    minDuration: 4,
+    maxDuration: 12,
+    hasSound: true,
   }
 };
 
 const KLING_API = 'https://api-beijing.klingai.com/v1';
 const VIDU_API = 'https://api.vidu.com/ent/v2';
 const JIMENG_API = 'https://visual.volcengineapi.com';
+const AGNES_API = 'https://apihub.agnes-ai.com/v1';
 
 let state = {
   model: 'vidu',
@@ -833,15 +856,18 @@ window.onload = function() {
   const jsk = localStorage.getItem('jimeng_sk');
   if (jsk) document.getElementById('jimengSK').value = jsk;
   if (jak || jsk) updateApiStatus();
+  const agnes = localStorage.getItem('agnes_key');
+  if (agnes) { document.getElementById('agnesKey').value = agnes; updateApiStatus(); }
 };
 
-['viduToken','klingApiKey','klingSecretKey','jimengAK','jimengSK'].forEach(id => {
+['viduToken','klingApiKey','klingSecretKey','jimengAK','jimengSK','agnesKey'].forEach(id => {
   document.getElementById(id).addEventListener('change', function() {
     if (id === 'viduToken') localStorage.setItem('vidu_token', this.value);
     if (id === 'klingApiKey') localStorage.setItem('kling_api_key', this.value);
     if (id === 'klingSecretKey') localStorage.setItem('kling_secret_key', this.value);
     if (id === 'jimengAK') localStorage.setItem('jimeng_ak', this.value);
     if (id === 'jimengSK') localStorage.setItem('jimeng_sk', this.value);
+    if (id === 'agnesKey') localStorage.setItem('agnes_key', this.value);
     updateApiStatus();
   });
 });
@@ -854,6 +880,10 @@ function updateApiStatus() {
     } else { el.textContent = '未配置'; el.style.color = '#666'; }
   } else if (state.model === 'jimeng') {
     if (document.getElementById('jimengAK').value.trim() && document.getElementById('jimengSK').value.trim()) {
+      el.textContent = '已配置'; el.style.color = '#10b981';
+    } else { el.textContent = '未配置'; el.style.color = '#666'; }
+  } else if (state.model === 'agnes') {
+    if (document.getElementById('agnesKey').value.trim()) {
       el.textContent = '已配置'; el.style.color = '#10b981';
     } else { el.textContent = '未配置'; el.style.color = '#666'; }
   } else {
@@ -886,6 +916,7 @@ function selectModel(model) {
   document.getElementById('viduApi').style.display = model === 'vidu' ? 'block' : 'none';
   document.getElementById('klingApi').style.display = (model === 'kling26' || model === 'kling3') ? 'block' : 'none';
   document.getElementById('jimengApi').style.display = model === 'jimeng' ? 'block' : 'none';
+  document.getElementById('agnesApi').style.display = model === 'agnes' ? 'block' : 'none';
   document.querySelectorAll('.kling-only').forEach(el => {
     el.style.display = (model === 'kling26' || model === 'kling3') ? 'block' : 'none';
   });
@@ -1076,6 +1107,8 @@ async function generate() {
       await generateVidu(videoUrl);
     } else if (state.model === 'jimeng') {
       await generateJimeng(videoUrl);
+    } else if (state.model === 'agnes') {
+      await generateAgnes(videoUrl);
     } else {
       await generateKling(videoUrl);
     }
@@ -1385,6 +1418,108 @@ async function generateJimeng(videoUrl) {
       resetBtn();
     }
   }, 5000);
+}
+
+// ============ Agnes生成 ============
+async function generateAgnes(videoUrl) {
+  const apiKey = document.getElementById('agnesKey').value.trim();
+  if (!apiKey) throw new Error('请先配置Agnes API Key');
+
+  // 上传视频到catbox
+  if (state.videoInputMode === 'upload' && !videoUrl) {
+    updateProgress(5, '正在上传参考视频...');
+    videoUrl = await uploadToCatbox(state.videoFile);
+  }
+
+  // 上传图片到catbox（Agnes需要公网URL）
+  updateProgress(10, '正在上传人物图片...');
+  let imageUrl = null;
+  if (state.imageFile) {
+    imageUrl = await uploadToCatbox(state.imageFile);
+  } else {
+    // 如果是base64，转成blob再上传
+    const base64 = state.imageBase64;
+    const arr = base64.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) { u8arr[n] = bstr.charCodeAt(n); }
+    const blob = new Blob([u8arr], { type: mime });
+    imageUrl = await uploadToCatbox(blob);
+  }
+
+  updateProgress(15, '正在提交任务...');
+
+  // 创建任务
+  const duration = Math.min(Math.max(state.duration, 4), 12);
+  const body = JSON.stringify({
+    model: 'agnes-video-2.5',
+    prompt: '参考 <Video 1> 中的人物动作和舞蹈节奏，保持 <Picture 1> 中的人物外观、服装和面部特征一致，自然流畅地完成相同的舞蹈动作，竖版构图',
+    mode: 'reference',
+    seconds: duration.toString(),
+    size: '720P',
+    aspect_ratio: '9:16',
+    images: [imageUrl],
+    videos: [{
+      url: videoUrl,
+      start_seconds: 0,
+      require_audio: false
+    }]
+  });
+
+  const res = await fetch(AGNES_API + '/videos', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + apiKey,
+      'Content-Type': 'application/json'
+    },
+    body: body
+  });
+  const data = await res.json();
+
+  if (!data.video_id && !data.id) {
+    throw new Error(data.error?.message || data.message || '任务提交失败');
+  }
+
+  const videoId = data.video_id || data.id;
+  state.taskId = videoId;
+  updateProgress(20, '任务已提交，等待生成...');
+
+  // 轮询查询
+  const startTime = Date.now();
+  state.pollTimer = setInterval(async () => {
+    try {
+      const elapsed = (Date.now() - startTime) / 1000;
+      const queryRes = await fetch(AGNES_API.replace('/v1', '') + '/agnesapi?video_id=' + videoId + '&model_name=agnes-video-2.5', {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + apiKey }
+      });
+      const queryData = await queryRes.json();
+
+      const status = queryData.status;
+      if (status === 'completed') {
+        clearInterval(state.pollTimer);
+        if (!queryData.metadata || !queryData.metadata.url) throw new Error('未获取到视频地址');
+        state.resultVideoUrl = queryData.metadata.url;
+        showResult(queryData.metadata.url, `${MODELS[state.model].name} 生成完成，720P竖版，时长${duration}秒`);
+      } else if (status === 'failed') {
+        clearInterval(state.pollTimer);
+        throw new Error(queryData.error?.message || '生成失败');
+      } else {
+        const p = Math.min(20 + (elapsed / 120) * 70, 95);
+        const progress = queryData.progress || 0;
+        const statusText = status === 'in_progress' ? `AI绘制视频帧中（${progress}%）...` : '任务排队中...';
+        updateProgress(p, `${statusText}（已等待${Math.floor(elapsed)}秒）`);
+      }
+
+      if (elapsed >= 300) { clearInterval(state.pollTimer); throw new Error('生成超时'); }
+    } catch (err) {
+      clearInterval(state.pollTimer);
+      showToast(err.message || '查询失败', 'error');
+      resetBtn();
+    }
+  }, 3000);
 }
 
 // ============ 结果 ============
