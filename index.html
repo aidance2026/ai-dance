@@ -1054,12 +1054,13 @@ function updateCost() {
 
 // ============ Catbox上传 ============
 async function uploadToCatbox(file) {
-  // 优先使用uguu.se（稳定快速），catbox作为备用
+  const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
+  // 优先使用uguu.se（稳定快速）
   const fd = new FormData();
   fd.append('files[]', file);
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000);
+    const timeout = setTimeout(() => controller.abort(), 120000);
     const res = await fetch('https://uguu.se/upload.php', { method: 'POST', body: fd, signal: controller.signal });
     clearTimeout(timeout);
     if (res.ok) {
@@ -1068,7 +1069,10 @@ async function uploadToCatbox(file) {
         return data.files[0].url;
       }
     }
-  } catch (e) { console.warn('uguu上传失败，尝试备用:', e.message); }
+  } catch (e) {
+    console.warn('uguu上传失败:', e.message);
+    if (e.name === 'AbortError') throw new Error(`上传超时（120秒），文件大小${fileSizeMB}MB。建议：1)压缩视频到20MB以内；2)改用"视频URL"方式；3)检查网络上传速度`);
+  }
 
   // 备用：catbox.moe
   const fd2 = new FormData();
@@ -1076,12 +1080,12 @@ async function uploadToCatbox(file) {
   fd2.append('fileToUpload', file);
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000);
+    const timeout = setTimeout(() => controller.abort(), 60000);
     const res = await fetch('https://catbox.moe/user/api.php', { method: 'POST', body: fd2, signal: controller.signal });
     clearTimeout(timeout);
     if (res.ok) { const u = await res.text(); if (u.startsWith('http')) return u.trim(); }
   } catch (e) {}
-  throw new Error('文件上传失败，请改用"视频URL"方式或检查网络');
+  throw new Error(`文件上传失败（${fileSizeMB}MB）。建议：1)压缩视频到20MB以内；2)改用"视频URL"方式直接粘贴链接；3)检查网络连接`);
 }
 
 // ============ 带超时的fetch（防止API卡住） ============
