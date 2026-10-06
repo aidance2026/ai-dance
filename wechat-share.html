@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<!-- 微信分享卡片标签（Open Graph） -->
+<meta property="og:title" content="AI舞蹈模仿平台 | 上传照片一键生成舞蹈视频">
+<meta property="og:description" content="5大AI模型·手机即用·永久使用·新用户免费体验。上传人物图+舞蹈视频，AI精准模仿动作，30秒出片！">
+<meta property="og:image" content="https://aka.doubaocdn.com/s/PemhbIfHU2">
+<meta property="og:url" content="https://aidance2026.github.io/ai-dance/">
+<meta property="og:type" content="website">
+<meta name="description" content="AI舞蹈模仿平台，5大AI模型，上传照片一键生成舞蹈视频，手机电脑即用，永久使用">
+
+<title>AI舞蹈模仿平台 | 上传照片一键生成舞蹈视频</title>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: #fff;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* 顶部Banner */
+.banner {
+  position: relative;
+  padding: 40px 20px 30px;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(236,72,153,0.2));
+  overflow: hidden;
+}
+.banner::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+  animation: pulse 4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+}
+.banner .logo {
+  font-size: 48px;
+  margin-bottom: 12px;
+  animation: bounce 2s ease-in-out infinite;
+}
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.banner h1 {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #a78bfa, #f472b6, #fbbf24);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.banner .subtitle {
+  font-size: 14px;
+  color: #c4b5fd;
+  line-height: 1.6;
+}
+.banner .price-tag {
+  display: inline-block;
+  margin-top: 16px;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  padding: 8px 24px;
+  border-radius: 20px;
+  font-size: 20px;
+  font-weight: 800;
+  box-shadow: 0 4px 20px rgba(245,158,11,0.4);
+}
+.banner .price-tag span {
+  font-size: 12px;
+  text-decoration: line-through;
+  opacity: 0.7;
+  margin-left: 8px;
+}
+
+/* 内容区 */
+.content { padding: 20px; }
+
+/* 功能卡片 */
+.section {
+  background: rgba(255,255,255,0.06);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+}
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #a78bfa;
+}
+.section-title .icon { font-size: 20px; }
+
+/* 功能网格 */
+.feature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.feature-item {
+  background: rgba(139,92,246,0.1);
+  border-radius: 12px;
+  padding: 16px 12px;
+  text-align: center;
+  border: 1px solid rgba(139,92,246,0.2);
+}
+.feature-item .icon { font-size: 28px; margin-bottom: 8px; }
+.feature-item .title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.feature-item .desc { font-size: 11px; color: #9ca3af; line-height: 1.4; }
+
+/* 模型列表 */
+.model-list { display: flex; flex-direction: column; gap: 10px; }
+.model-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.04);
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.model-item .model-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.model-item .model-info { flex: 1; }
+.model-item .model-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+.model-item .model-desc { font-size: 11px; color: #9ca3af; }
+.model-item .model-price {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+.model-item .model-free {
+  font-size: 10px;
+  background: rgba(16,185,129,0.2);
+  color: #10b981;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 2px;
+  display: inline-block;
+}
+
+/* 使用步骤 */
+.steps { display: flex; flex-direction: column; gap: 16px; }
+.step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.step-num {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.step-content h3 { font-size: 14px; margin-bottom: 4px; }
+.step-content p { font-size: 12px; color: #9ca3af; line-height: 1.5; }
+
+/* 二维码区域 */
+.qr-section {
+  text-align: center;
+  padding: 24px 20px;
+}
+.qr-box {
+  background: #fff;
+  padding: 16px;
+  border-radius: 16px;
+  display: inline-block;
+  margin-bottom: 12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+}
+.qr-box img { width: 180px; height: 180px; display: block; }
+.qr-tip {
+  font-size: 13px;
+  color: #c4b5fd;
+  margin-bottom: 4px;
+}
+.qr-url {
+  font-size: 12px;
+  color: #6b7280;
+  word-break: break-all;
+}
+
+/* 底部按钮 */
+.action-bar {
+  position: sticky;
+  bottom: 0;
+  background: rgba(26,26,46,0.95);
+  backdrop-filter: blur(20px);
+  padding: 12px 20px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  gap: 10px;
+}
+.btn {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(139,92,246,0.4);
+}
+.btn-primary:active { transform: scale(0.98); }
+.btn-secondary {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.btn-secondary:active { transform: scale(0.98); }
+
+/* 标签 */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 12px;
+}
+.tag {
+  background: rgba(16,185,129,0.15);
+  color: #10b981;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* 底部说明 */
+.footer {
+  text-align: center;
+  padding: 20px;
+  color: #4b5563;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- 顶部Banner -->
+<div class="banner">
+  <div class="logo">💃</div>
+  <h1>AI舞蹈模仿平台</h1>
+  <p class="subtitle">上传照片 · 一键生成舞蹈视频<br>5大AI模型 · 手机即用 · 永久使用</p>
+  <div class="price-tag">¥198 <span>¥398</span></div>
+  <div class="tags">
+    <span class="tag">✅ 一次性付费</span>
+    <span class="tag">✅ 永久使用</span>
+    <span class="tag">✅ 新用户免费体验</span>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- 核心功能 -->
+  <div class="section">
+    <div class="section-title"><span class="icon">✨</span> 核心功能</div>
+    <div class="feature-grid">
+      <div class="feature-item">
+        <div class="icon">🎭</div>
+        <div class="title">动作模仿</div>
+        <div class="desc">上传人物图+舞蹈视频，AI精准模仿</div>
+      </div>
+      <div class="feature-item">
+        <div class="icon">📱</div>
+        <div class="title">手机即用</div>
+        <div class="desc">浏览器打开，无需下载APP</div>
+      </div>
+      <div class="feature-item">
+        <div class="icon">🔑</div>
+        <div class="title">5大模型</div>
+        <div class="desc">即梦/可灵/Vidu/Agnes自由切换</div>
+      </div>
+      <div class="feature-item">
+        <div class="icon">📥</div>
+        <div class="title">一键导出</div>
+        <div class="desc">生成后直接下载分享</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模型价格 -->
+  <div class="section">
+    <div class="section-title"><span class="icon">💰</span> 5大模型算力价格（买家自付）</div>
+    <div class="model-list">
+      <div class="model-item">
+        <div class="model-icon" style="background:rgba(245,158,11,0.2)">🎭</div>
+        <div class="model-info">
+          <div class="model-name">即梦2.0 <span class="model-free">免费试用</span></div>
+          <div class="model-desc">字节跳动 · 动作模仿 · 最长30秒</div>
+        </div>
+        <div class="model-price">¥0.4/秒</div>
+      </div>
+      <div class="model-item">
+        <div class="model-icon" style="background:rgba(239,68,68,0.2)">🔥</div>
+        <div class="model-info">
+          <div class="model-name">可灵2.6 <span class="model-free">送积分</span></div>
+          <div class="model-desc">快手 · 动作控制 · 保留原声</div>
+        </div>
+        <div class="model-price">¥0.5/秒</div>
+      </div>
+      <div class="model-item">
+        <div class="model-icon" style="background:rgba(59,130,246,0.2)">🎬</div>
+        <div class="model-info">
+          <div class="model-name">Vidu</div>
+          <div class="model-desc">动作同步 · 最便宜</div>
+        </div>
+        <div class="model-price">¥0.36/秒</div>
+      </div>
+      <div class="model-item">
+        <div class="model-icon" style="background:rgba(16,185,129,0.2)">✨</div>
+        <div class="model-info">
+          <div class="model-name">Agnes 2.5</div>
+          <div class="model-desc">国际模型 · 视频参考</div>
+        </div>
+        <div class="model-price">¥0.36/秒</div>
+      </div>
+      <div class="model-item">
+        <div class="model-icon" style="background:rgba(168,85,247,0.2)">🚀</div>
+        <div class="model-info">
+          <div class="model-name">可灵3.0 <span class="model-free">送积分</span></div>
+          <div class="model-desc">快手 · 高质量 · 动作控制</div>
+        </div>
+        <div class="model-price">¥0.9/秒</div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:#6b7280;text-align:center;margin-top:12px;">
+      💡 10秒视频成本约¥3.6-5元，新用户可领免费额度零成本体验
+    </p>
+  </div>
+
+  <!-- 使用步骤 -->
+  <div class="section">
+    <div class="section-title"><span class="icon">📖</span> 3步上手</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h3>打开平台 + 输入授权码</h3>
+          <p>浏览器打开平台，输入授权码，自动保存</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h3>配置API + 上传素材</h3>
+          <p>选择模型，注册领取免费额度，填入密钥；上传人物图和舞蹈视频</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h3>一键生成 + 下载分享</h3>
+          <p>调整时长，点击生成，等待30秒-3分钟，完成后下载分享</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 二维码 -->
+  <div class="section qr-section">
+    <div class="section-title" style="justify-content:center;"><span class="icon">📱</span> 扫码立即体验</div>
+    <div class="qr-box">
+      <img id="qrImg" src="" alt="平台二维码">
+    </div>
+    <p class="qr-tip">长按识别二维码，打开AI舞蹈模仿平台</p>
+    <p class="qr-url">https://aidance2026.github.io/ai-dance/</p>
+  </div>
+
+</div>
+
+<!-- 底部操作栏 -->
+<div class="action-bar">
+  <button class="btn btn-secondary" onclick="copyUrl()">🔗 复制链接</button>
+  <a href="https://aidance2026.github.io/ai-dance/" class="btn btn-primary" target="_blank">🚀 立即打开</a>
+</div>
+
+<div class="footer">
+  <p>AI舞蹈模仿平台 · 一次性技术费¥198 · 永久使用</p>
+  <p style="margin-top:4px;">本平台为技术工具，AI算力费由各平台收取，买家自行注册付费</p>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// 生成二维码（使用公共API）
+const platformUrl = 'https://aidance2026.github.io/ai-dance/';
+document.getElementById('qrImg').src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(platformUrl);
+
+// 复制链接
+function copyUrl() {
+  const url = 'https://aidance2026.github.io/ai-dance/';
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('链接已复制，快去微信分享吧！');
+    }).catch(() => {
+      fallbackCopy(url);
+    });
+  } else {
+    fallbackCopy(url);
+  }
+}
+
+function fallbackCopy(text) {
+  const input = document.createElement('input');
+  input.value = text;
+  document.body.appendChild(input);
+  input.select();
+  try {
+    document.execCommand('copy');
+    showToast('链接已复制，快去微信分享吧！');
+  } catch(e) {
+    showToast('复制失败，请手动复制');
+  }
+  document.body.removeChild(input);
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+</script>
+
+</body>
+</html>
