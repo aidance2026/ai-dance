@@ -3,386 +3,314 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>AI舞蹈模仿 - 多模型一键生成</title>
+<title>AI舞蹈模仿 - 让照片中的你动起来</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 :root {
-  --bg: #0a0a0f;
-  --card: #14141c;
-  --border: #2a2a38;
-  --text: #e0e0e0;
-  --muted: #888;
-  --primary: #8b5cf6;
-  --primary-light: #c4b5fd;
-  --accent: #ec4899;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+  --primary: #10b981; --primary-dark: #059669; --primary-light: #6ee7b7;
+  --primary-bg: #ecfdf5; --accent: #14b8a6; --bg: #f0fdf4;
+  --card: #ffffff; --text: #1f2937; --muted: #6b7280; --border: #e5e7eb;
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --purple: #8b5cf6;
 }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  overflow-x: hidden;
+  background: linear-gradient(180deg, #f0fdf4 0%, #ecfdf5 30%, #f0fdfa 100%);
+  color: var(--text); min-height: 100vh; overflow-x: hidden;
 }
-.container { max-width: 520px; margin: 0 auto; padding: 16px; padding-bottom: 40px; }
-
-/* Header */
-.header { text-align: center; padding: 20px 0 16px; position: relative; }
-.header::before {
-  content: ''; position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
-  width: 320px; height: 180px;
-  background: radial-gradient(ellipse, rgba(139,92,246,0.18) 0%, transparent 70%);
-  pointer-events: none;
+.container { max-width: 520px; margin: 0 auto; padding: 0 16px 40px; }
+.topnav {
+  position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(16,185,129,0.1); padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between;
 }
-.logo {
-  font-size: 26px; font-weight: 800;
-  background: linear-gradient(135deg, #8b5cf6, #ec4899, #f59e0b);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+.topnav .logo { display: flex; align-items: center; gap: 10px; }
+.topnav .logo-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, #10b981, #14b8a6);
+  display: flex; align-items: center; justify-content: center; font-size: 18px; color: white;
 }
-.subtitle { font-size: 12px; color: var(--muted); margin-top: 4px; }
-
-/* Model Selector */
-.model-selector {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-  margin-bottom: 14px;
+.topnav .logo-text { font-size: 15px; font-weight: 700; color: var(--text); }
+.topnav .logo-sub { font-size: 10px; color: var(--muted); margin-top: 1px; }
+.topnav .nav-right { display: flex; align-items: center; gap: 8px; }
+.topnav .nav-btn {
+  padding: 6px 12px; border-radius: 20px; font-size: 12px;
+  background: var(--primary-bg); color: var(--primary-dark); border: none; cursor: pointer; font-weight: 600;
 }
+.hero { text-align: center; padding: 28px 0 20px; position: relative; }
+.hero::before {
+  content: ''; position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+  width: 300px; height: 200px; background: radial-gradient(ellipse, rgba(16,185,129,0.12) 0%, transparent 70%); pointer-events: none;
+}
+.hero-tag {
+  display: inline-block; padding: 4px 14px; border-radius: 20px;
+  background: var(--primary-bg); color: var(--primary-dark); font-size: 11px; font-weight: 600;
+  margin-bottom: 12px; border: 1px solid rgba(16,185,129,0.2);
+}
+.hero-title {
+  font-size: 28px; font-weight: 800; line-height: 1.3;
+  background: linear-gradient(135deg, #059669, #14b8a6, #0891b2);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 8px;
+}
+.hero-sub { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.banner {
+  background: linear-gradient(135deg, #ecfdf5, #f0fdfa); border-radius: 20px; padding: 20px;
+  margin-bottom: 16px; border: 1px solid rgba(16,185,129,0.15); position: relative; overflow: hidden;
+}
+.banner::after {
+  content: ''; position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(20,184,166,0.15), transparent 70%);
+}
+.banner-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.banner-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
+.banner-features { display: flex; gap: 8px; flex-wrap: wrap; }
+.banner-feature {
+  padding: 5px 10px; border-radius: 12px; background: white; font-size: 11px;
+  color: var(--primary-dark); font-weight: 600; border: 1px solid rgba(16,185,129,0.15);
+}
+.section-title {
+  font-size: 16px; font-weight: 700; color: var(--text); margin: 20px 0 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-title .icon { font-size: 18px; }
+.model-scroll {
+  display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.model-scroll::-webkit-scrollbar { display: none; }
 .model-card {
-  background: var(--card); border: 2px solid var(--border); border-radius: 14px;
-  padding: 12px 8px; cursor: pointer; transition: all 0.25s; text-align: center;
-  position: relative; overflow: hidden;
+  flex-shrink: 0; width: 130px; background: var(--card); border: 2px solid var(--border);
+  border-radius: 16px; padding: 14px 10px; cursor: pointer; transition: all 0.25s;
+  text-align: center; position: relative;
 }
 .model-card.active {
-  border-color: var(--primary);
-  background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(236,72,153,0.08));
-  box-shadow: 0 4px 20px rgba(139,92,246,0.2);
+  border-color: var(--primary); background: linear-gradient(135deg, #ecfdf5, #f0fdfa);
+  box-shadow: 0 4px 20px rgba(16,185,129,0.15);
 }
-.model-card .model-icon { font-size: 24px; margin-bottom: 4px; }
-.model-card .model-name { font-size: 12px; font-weight: 700; color: var(--text); }
-.model-card .model-desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
-.model-card .model-price { font-size: 10px; color: var(--success); margin-top: 4px; font-weight: 600; }
-.model-card.active .model-name { color: var(--primary-light); }
+.model-card .model-icon { font-size: 26px; margin-bottom: 6px; }
+.model-card .model-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.model-card .model-desc { font-size: 10px; color: var(--muted); margin-top: 3px; }
+.model-card .model-price { font-size: 11px; color: var(--primary-dark); margin-top: 6px; font-weight: 700; }
+.model-card.active .model-name { color: var(--primary-dark); }
 .model-badge {
-  position: absolute; top: 4px; right: 4px;
-  background: var(--warning); color: #000; font-size: 9px; font-weight: 700;
-  padding: 2px 5px; border-radius: 4px;
+  position: absolute; top: 6px; right: 6px; background: var(--warning); color: white;
+  font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 6px;
 }
-
-/* Card */
-.card {
-  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
-  padding: 16px; margin-bottom: 12px;
+.model-badge.new { background: var(--purple); }
+.model-badge.soon { background: var(--muted); }
+.create-card {
+  background: var(--card); border-radius: 20px; padding: 18px; margin-bottom: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04); border: 1px solid rgba(16,185,129,0.08);
 }
-.card-title {
-  font-size: 13px; font-weight: 600; color: #aaa; margin-bottom: 12px;
-  display: flex; align-items: center; gap: 6px;
-}
-.card-title .icon { font-size: 15px; }
-
-/* API Config */
-.api-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-.api-row:last-child { margin-bottom: 0; }
-.text-input {
-  width: 100%; background: #0e0e14; border: 1px solid #2e2e40; border-radius: 10px;
-  padding: 10px 12px; font-size: 13px; color: var(--text); outline: none; transition: border-color 0.2s;
-}
-.text-input:focus { border-color: var(--primary); }
-.text-input::placeholder { color: #555; }
-.parse-link-btn {
-  width: 100%;
-  margin-top: 8px;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px dashed #8b5cf6;
-  background: rgba(139,92,246,0.08);
-  color: #8b5cf6;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.parse-link-btn:hover { background: rgba(139,92,246,0.15); }
-.parse-link-btn:active { transform: scale(0.98); }
-.api-toggle { font-size: 12px; color: var(--primary); cursor: pointer; white-space: nowrap; padding: 8px; }
-.api-hint { font-size: 10px; color: #555; margin-top: 6px; line-height: 1.4; }
-.api-hint a { color: var(--primary); text-decoration: none; }
-
-/* Upload */
-.upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+.card-title .icon { font-size: 16px; }
+.upload-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
 .upload-box {
-  border: 2px dashed #3a3a4e; border-radius: 12px; aspect-ratio: 3/4;
+  border: 2px dashed #d1fae5; border-radius: 14px; min-height: 160px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; background: #0e0e14;
+  cursor: pointer; transition: all 0.2s; background: #fafdfc; position: relative; overflow: hidden;
 }
-.upload-box:active { border-color: var(--primary); background: #1a1a28; }
-.upload-box .upload-icon { font-size: 28px; margin-bottom: 6px; }
-.upload-box .upload-text { font-size: 11px; color: #888; text-align: center; padding: 0 6px; }
-.upload-box .upload-hint { font-size: 9px; color: #555; margin-top: 3px; }
+.upload-box:hover { border-color: var(--primary); background: var(--primary-bg); }
+.upload-box .upload-icon { font-size: 32px; margin-bottom: 8px; }
+.upload-box .upload-text { font-size: 13px; font-weight: 600; color: var(--text); }
+.upload-box .upload-hint { font-size: 10px; color: var(--muted); margin-top: 4px; }
 .upload-box img, .upload-box video { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
-.upload-box .remove-btn {
-  position: absolute; top: 6px; right: 6px; width: 22px; height: 22px;
-  background: rgba(0,0,0,0.75); border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  font-size: 12px; color: #fff; cursor: pointer; z-index: 2;
+.remove-btn {
+  position: absolute; top: 6px; right: 6px; z-index: 10; width: 24px; height: 24px; border-radius: 50%;
+  background: rgba(0,0,0,0.5); color: white; border: none; font-size: 12px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
 }
-
-.input-tabs { display: flex; gap: 6px; margin: 10px 0 8px; }
+.input-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
 .input-tab {
-  flex: 1; padding: 7px; background: #1a1a24; border: 1px solid #2e2e40; border-radius: 8px;
-  font-size: 11px; color: #888; cursor: pointer; text-align: center; transition: all 0.2s;
+  flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--border);
+  background: white; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; text-align: center; transition: all 0.2s;
 }
-.input-tab.active { background: rgba(139,92,246,0.15); border-color: var(--primary); color: var(--primary-light); }
-
-/* Params */
-.param-group { margin-bottom: 14px; }
-.param-group:last-child { margin-bottom: 0; }
-.param-label { font-size: 12px; color: #999; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-.param-value { font-size: 15px; font-weight: 700; color: var(--primary); }
-
-.option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.option-btn {
-  padding: 10px 8px; background: #1a1a24; border: 1.5px solid #2e2e40; border-radius: 10px;
-  font-size: 12px; color: #aaa; cursor: pointer; text-align: center; transition: all 0.2s;
+.input-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+.text-input {
+  width: 100%; background: #f9fafb; border: 1px solid var(--border); border-radius: 10px;
+  padding: 11px 14px; font-size: 13px; color: var(--text); outline: none; transition: border-color 0.2s;
 }
-.option-btn.active { background: rgba(139,92,246,0.15); border-color: var(--primary); color: var(--primary-light); font-weight: 600; }
-.option-btn .option-sub { font-size: 10px; color: #666; margin-top: 2px; display: block; }
-.option-btn.active .option-sub { color: rgba(196,181,253,0.7); }
-
-.duration-slider {
-  width: 100%; -webkit-appearance: none; appearance: none; height: 6px;
-  background: #1a1a24; border-radius: 3px; outline: none;
+.text-input:focus { border-color: var(--primary); background: white; }
+.text-input::placeholder { color: #9ca3af; }
+.parse-link-btn {
+  width: 100%; margin-top: 8px; padding: 9px; border-radius: 8px; border: 1px dashed var(--primary);
+  background: var(--primary-bg); color: var(--primary-dark); font-size: 12px; cursor: pointer; font-weight: 600;
 }
-.duration-slider::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none; width: 20px; height: 20px;
-  background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 50%;
-  cursor: pointer; box-shadow: 0 2px 8px rgba(139,92,246,0.4);
+.tip-bar {
+  background: var(--primary-bg); border-radius: 10px; padding: 10px 14px; font-size: 11px;
+  color: var(--primary-dark); line-height: 1.5; margin-bottom: 14px; border: 1px solid rgba(16,185,129,0.15);
 }
-.duration-hints { display: flex; justify-content: space-between; font-size: 10px; color: #555; margin-top: 6px; }
-
-.cost-display {
-  background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3);
-  border-radius: 10px; padding: 12px; margin-top: 10px;
+.param-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.param-label { font-size: 13px; color: var(--text); font-weight: 600; }
+.param-value { font-size: 18px; font-weight: 800; color: var(--primary-dark); }
+.param-value .unit { font-size: 12px; font-weight: 500; color: var(--muted); }
+.slider {
+  width: 100%; -webkit-appearance: none; appearance: none; height: 6px; border-radius: 3px;
+  background: #e5e7eb; outline: none; margin-bottom: 6px;
 }
-.cost-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-.cost-row:last-child { margin-bottom: 0; }
-.cost-label { font-size: 12px; color: #6ee7b7; }
-.cost-value { font-size: 18px; font-weight: 800; color: var(--success); }
-.cost-sub { font-size: 10px; color: rgba(110,231,183,0.6); }
-
-.switch-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
-.switch-label { font-size: 12px; color: #aaa; }
-.switch { position: relative; width: 44px; height: 24px; cursor: pointer; }
-.switch input { opacity: 0; width: 0; height: 0; }
-.switch .slider {
-  position: absolute; inset: 0; background: #2a2a38; border-radius: 24px; transition: 0.3s;
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%;
+  background: linear-gradient(135deg, #10b981, #14b8a6); cursor: pointer; box-shadow: 0 2px 8px rgba(16,185,129,0.3);
 }
-.switch .slider::before {
-  content: ''; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px;
-  background: #fff; border-radius: 50%; transition: 0.3s;
+.slider::-moz-range-thumb {
+  width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #10b981, #14b8a6); cursor: pointer; border: none;
 }
-.switch input:checked + .slider { background: var(--primary); }
-.switch input:checked + .slider::before { transform: translateX(20px); }
-
-/* Generate Button */
+.slider-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); }
+.cost-box {
+  background: linear-gradient(135deg, #ecfdf5, #f0fdfa); border-radius: 12px; padding: 14px;
+  margin: 14px 0; border: 1px solid rgba(16,185,129,0.15); display: flex; justify-content: space-between; align-items: center;
+}
+.cost-label { font-size: 12px; color: var(--muted); }
+.cost-label .main { font-size: 14px; font-weight: 700; color: var(--text); display: block; margin-bottom: 2px; }
+.cost-value { font-size: 22px; font-weight: 800; color: var(--primary-dark); }
+.cost-value .unit { font-size: 12px; font-weight: 500; color: var(--muted); }
 .generate-btn {
-  width: 100%; padding: 16px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  border: none; border-radius: 14px; font-size: 16px; font-weight: 700; color: #fff;
-  cursor: pointer; transition: all 0.2s; margin-top: 4px;
-  box-shadow: 0 4px 20px rgba(139,92,246,0.3);
+  width: 100%; padding: 16px; border-radius: 14px; border: none;
+  background: linear-gradient(135deg, #10b981, #14b8a6, #0891b2); color: white;
+  font-size: 17px; font-weight: 800; cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(16,185,129,0.3); display: flex; align-items: center; justify-content: center; gap: 8px;
 }
 .generate-btn:active { transform: scale(0.98); }
-.generate-btn:disabled { background: #2a2a38; color: #666; cursor: not-allowed; box-shadow: none; }
-
-/* Progress */
-.progress-card { display: none; }
-.progress-card.show { display: block; }
-.progress-bar { width: 100%; height: 8px; background: #1a1a24; border-radius: 4px; overflow: hidden; margin: 12px 0; }
-.progress-fill {
-  height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent));
-  border-radius: 4px; transition: width 0.5s; width: 0%;
-}
-.progress-text { font-size: 13px; color: #aaa; text-align: center; }
-.progress-status { font-size: 11px; color: var(--primary); text-align: center; margin-top: 6px; }
-
-/* Result */
-.result-card { display: none; }
-.result-card.show { display: block; }
-.result-video {
-  width: 100%;
-  aspect-ratio: 9/16;
-  max-height: 70vh;
-  border-radius: 12px;
-  background: #000;
-  margin-bottom: 12px;
-  object-fit: contain;
-}
-.result-video::-webkit-media-controls { display: flex !important; }
-.result-tip {
-  font-size: 12px;
-  color: #888;
-  text-align: center;
-  margin-bottom: 12px;
-  padding: 8px;
-  background: rgba(139,92,246,0.1);
-  border-radius: 8px;
-  display: none;
-}
-.result-tip.show { display: block; }
-.result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.result-btn {
-  flex: 1; min-width: 110px; padding: 11px; border-radius: 10px; font-size: 12px;
-  font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;
-}
-.result-btn.download { background: linear-gradient(135deg, var(--success), #059669); color: #fff; }
-.result-btn.share { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; }
-.result-btn.mixaudio { background: linear-gradient(135deg, var(--warning), #d97706); color: #fff; }
-.result-btn.new { background: #1a1a24; border: 1px solid #2e2e40; color: #aaa; }
-.result-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.result-info {
-  background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.2);
-  border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 11px; color: #a78bfa; line-height: 1.6;
-}
-
-/* Footer */
-.footer { text-align: center; padding: 16px 0; font-size: 10px; color: #444; }
-
-/* Toast */
-.toast {
-  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-  background: rgba(20,20,28,0.95); border: 1px solid #3a3a4e; border-radius: 10px;
-  padding: 12px 20px; font-size: 13px; color: var(--text); z-index: 1000;
-  opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 90%; text-align: center;
-}
-.toast.show { opacity: 1; }
-.toast.error { border-color: var(--danger); color: #fca5a5; }
-.toast.success { border-color: var(--success); color: #6ee7b7; }
-
+.generate-btn:disabled { opacity: 0.7; cursor: not-allowed; }
 .spinner {
-  display: inline-block; width: 14px; height: 14px;
-  border: 2px solid rgba(139,92,246,0.3); border-top-color: var(--primary);
-  border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 5px;
+  width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
+  border-radius: 50%; animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-
-.collapsible { overflow: hidden; max-height: 0; transition: max-height 0.3s; }
-.collapsible.show { max-height: 300px; }
-
-.tip-box {
-  background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.2);
-  border-radius: 8px; padding: 10px 12px; font-size: 10px; color: #a78bfa; margin-top: 10px; line-height: 1.5;
+.progress-card { display: none; background: var(--card); border-radius: 16px; padding: 18px; margin-bottom: 14px; border: 1px solid rgba(16,185,129,0.1); }
+.progress-card.show { display: block; }
+.progress-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.progress-bar { width: 100%; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #10b981, #14b8a6); border-radius: 4px; transition: width 0.5s; width: 0%; }
+.progress-text { font-size: 12px; color: var(--muted); text-align: center; }
+.result-card { display: none; background: var(--card); border-radius: 20px; padding: 18px; margin-bottom: 14px; border: 1px solid rgba(16,185,129,0.15); box-shadow: 0 4px 20px rgba(16,185,129,0.08); }
+.result-card.show { display: block; }
+.result-title { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.result-info { font-size: 12px; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
+.result-tip { display: none; font-size: 11px; color: var(--warning); background: #fffbeb; padding: 8px 12px; border-radius: 8px; margin-bottom: 12px; }
+.result-tip.show { display: block; }
+.result-video { width: 100%; border-radius: 14px; background: #000; max-height: 400px; object-fit: contain; margin-bottom: 14px; }
+.result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.result-btn {
+  padding: 12px; border-radius: 12px; border: none; font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
 }
-
-.textarea-input {
-  width: 100%; background: #0e0e14; border: 1px solid #2e2e40; border-radius: 10px;
-  padding: 10px 12px; font-size: 12px; color: var(--text); outline: none;
-  transition: border-color 0.2s; resize: vertical; min-height: 60px; font-family: inherit;
+.result-btn:active { transform: scale(0.97); }
+.result-btn.download { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+.result-btn.share { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+.result-btn.mixaudio { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; }
+.result-btn.new { background: #f3f4f6; color: var(--text); }
+.api-section { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.api-section.show { display: block; }
+.api-toggle {
+  width: 100%; padding: 10px; background: none; border: 1px dashed var(--border); border-radius: 10px;
+  font-size: 12px; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
 }
-.textarea-input:focus { border-color: var(--primary); }
-.textarea-input::placeholder { color: #555; }
-
-/* 访问密码遮罩 */
+.api-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.api-row:last-child { margin-bottom: 0; }
+.api-label { font-size: 11px; color: var(--muted); white-space: nowrap; width: 70px; }
+.api-hint { font-size: 10px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+.api-hint a { color: var(--primary); text-decoration: none; }
+.api-status { font-size: 11px; font-weight: 600; }
+.kling-only { display: none; }
+.kling-only.show { display: block; }
+.mode-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.mode-btn {
+  flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: white;
+  font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer;
+}
+.mode-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+.checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 12px; color: var(--text); }
+.checkbox-row input { width: 16px; height: 16px; accent-color: var(--primary); }
+.footer { text-align: center; padding: 20px 0; font-size: 11px; color: var(--muted); line-height: 1.6; }
+.toast {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+  background: rgba(0,0,0,0.85); color: white; padding: 12px 24px; border-radius: 12px;
+  font-size: 14px; z-index: 1000; transition: transform 0.3s; max-width: 90%; text-align: center;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { background: var(--success); }
+.toast.error { background: var(--danger); }
 .access-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(10,10,15,0.98); z-index: 9999;
-  display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(10px);
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 200;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
 }
 .access-box {
-  background: var(--card); border: 1px solid var(--border); border-radius: 20px;
-  padding: 36px 28px; width: 90%; max-width: 360px; text-align: center;
-  box-shadow: 0 20px 60px rgba(139,92,246,0.2);
+  background: white; border-radius: 24px; padding: 32px 24px; width: 100%; max-width: 360px;
+  text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
 }
-.access-icon { font-size: 48px; margin-bottom: 12px; }
-.access-title { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
-.access-subtitle { font-size: 12px; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+.access-icon { font-size: 48px; margin-bottom: 16px; }
+.access-title { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+.access-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
 .access-input {
-  width: 100%; background: #0e0e14; border: 1px solid #2e2e40; border-radius: 12px;
-  padding: 14px 16px; font-size: 15px; color: var(--text); outline: none;
-  text-align: center; letter-spacing: 4px; transition: border-color 0.2s;
+  width: 100%; padding: 14px; border-radius: 12px; border: 2px solid var(--border);
+  font-size: 16px; text-align: center; outline: none; margin-bottom: 16px; transition: border-color 0.2s;
 }
 .access-input:focus { border-color: var(--primary); }
 .access-btn {
-  width: 100%; margin-top: 14px; padding: 14px; border: none; border-radius: 12px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity 0.2s;
+  width: 100%; padding: 14px; border-radius: 12px; border: none;
+  background: linear-gradient(135deg, #10b981, #14b8a6); color: white;
+  font-size: 16px; font-weight: 700; cursor: pointer; margin-bottom: 12px;
 }
-.access-btn:active { opacity: 0.8; }
-.access-error { color: var(--danger); font-size: 12px; margin-top: 10px; min-height: 16px; }
-.access-hint { font-size: 10px; color: #555; margin-top: 16px; line-height: 1.4; }
-.admin-link { font-size: 11px; color: #444; margin-top: 12px; cursor: pointer; text-decoration: underline; }
-
-/* 卖家管理后台 */
+.access-error { color: var(--danger); font-size: 12px; margin-bottom: 12px; min-height: 16px; }
+.access-hint { font-size: 11px; color: var(--muted); line-height: 1.6; }
+.admin-link { font-size: 12px; color: var(--primary); cursor: pointer; margin-top: 16px; text-decoration: underline; }
 .admin-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(10,10,15,0.98); z-index: 10000;
-  display: none; align-items: center; justify-content: center;
-  backdrop-filter: blur(10px); overflow-y: auto; padding: 20px 0;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 300;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+  display: none; align-items: center; justify-content: center; padding: 20px;
 }
 .admin-overlay.show { display: flex; }
 .admin-box {
-  background: var(--card); border: 1px solid var(--border); border-radius: 20px;
-  padding: 24px 20px; width: 92%; max-width: 420px;
-  box-shadow: 0 20px 60px rgba(139,92,246,0.2);
+  background: white; border-radius: 20px; padding: 24px; width: 100%; max-width: 400px; max-height: 85vh; overflow-y: auto;
 }
-.admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .admin-title { font-size: 18px; font-weight: 800; color: var(--text); }
-.admin-close { font-size: 20px; cursor: pointer; color: var(--muted); padding: 4px 8px; }
-.admin-section { margin-bottom: 16px; }
-.admin-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
-.admin-input-row { display: flex; gap: 8px; }
-.admin-input {
-  flex: 1; background: #0e0e14; border: 1px solid #2e2e40; border-radius: 10px;
-  padding: 10px 12px; font-size: 13px; color: var(--text); outline: none;
-}
-.admin-input:focus { border-color: var(--primary); }
-.admin-btn-sm {
-  padding: 10px 16px; border: none; border-radius: 10px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap;
-}
-.admin-btn-sm.gray { background: #2a2a38; }
+.admin-close { width: 32px; height: 32px; border-radius: 50%; background: #f3f4f6; border: none; font-size: 16px; cursor: pointer; }
+.admin-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+.admin-input-row { display: flex; gap: 8px; margin-bottom: 14px; }
+.admin-input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; outline: none; }
+.admin-btn-sm { padding: 10px 16px; border-radius: 8px; border: none; background: var(--primary); color: white; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.admin-btn-sm.gray { background: #f3f4f6; color: var(--text); }
 .admin-btn-sm.danger { background: var(--danger); }
-.code-list { max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; }
-.code-item {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px;
+.admin-stat { display: flex; gap: 10px; margin-bottom: 16px; }
+.stat-card { flex: 1; background: var(--primary-bg); border-radius: 12px; padding: 14px; text-align: center; }
+.stat-num { font-size: 24px; font-weight: 800; color: var(--primary-dark); }
+.stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.admin-section { margin-bottom: 16px; }
+.code-list { max-height: 150px; overflow-y: auto; }
+.code-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f9fafb; border-radius: 8px; margin-bottom: 6px; }
+.code-text { font-size: 13px; font-weight: 600; color: var(--text); font-family: monospace; }
+.code-del { font-size: 11px; color: var(--danger); cursor: pointer; }
+.code-empty { text-align: center; color: var(--muted); font-size: 12px; padding: 20px; }
+@media (max-width: 380px) {
+  .hero-title { font-size: 24px; }
+  .model-card { width: 115px; }
 }
-.code-item:last-child { border-bottom: none; }
-.code-item .code-text { color: var(--primary-light); font-weight: 600; font-family: monospace; }
-.code-item .code-actions { display: flex; gap: 6px; }
-.code-item .code-del { color: var(--danger); cursor: pointer; font-size: 12px; }
-.code-empty { padding: 20px; text-align: center; color: #555; font-size: 12px; }
-.admin-stat { display: flex; gap: 12px; margin-bottom: 16px; }
-.stat-card { flex: 1; background: #0e0e14; border-radius: 10px; padding: 12px; text-align: center; }
-.stat-num { font-size: 22px; font-weight: 800; color: var(--primary); }
-.stat-label { font-size: 10px; color: var(--muted); margin-top: 2px; }
 </style>
 </head>
 <body>
-<!-- 访问授权验证 -->
+
 <div class="access-overlay" id="accessOverlay">
   <div class="access-box">
     <div class="access-icon">🔐</div>
     <div class="access-title">访问授权</div>
     <div class="access-subtitle">本平台需授权码访问<br>请输入您的授权码进入</div>
-    <input type="text" class="access-input" id="accessPassword" placeholder="请输入授权码" maxlength="20" onkeypress="if(event.key==='Enter')checkAccess()">
-    <button class="access-btn" onclick="checkAccess()">进入平台</button>
+    <input type="text" class="access-input" id="accessPassword" placeholder="请输入授权码" onkeypress="if(event.key==='Enter')checkAccess()">
     <div class="access-error" id="accessError"></div>
+    <button class="access-btn" onclick="checkAccess()">进入平台</button>
     <div class="access-hint">授权码由卖家提供，付费后获取<br>忘记授权码请联系卖家</div>
     <div class="admin-link" onclick="showAdminLogin()">卖家管理入口</div>
   </div>
 </div>
 
-<!-- 卖家管理后台 -->
 <div class="admin-overlay" id="adminOverlay">
   <div class="admin-box">
     <div class="admin-header">
       <div class="admin-title">👑 卖家管理后台</div>
-      <div class="admin-close" onclick="closeAdmin()">✕</div>
+      <button class="admin-close" onclick="closeAdmin()">✕</button>
     </div>
-
-    <!-- 卖家登录 -->
     <div id="adminLoginSection">
       <div class="admin-label">卖家管理密码</div>
       <div class="admin-input-row">
@@ -391,156 +319,119 @@ body {
       </div>
       <div class="access-error" id="adminError" style="margin-top:8px;"></div>
     </div>
-
-    <!-- 管理面板 -->
     <div id="adminPanel" style="display:none;">
       <div class="admin-stat">
-        <div class="stat-card">
-          <div class="stat-num" id="statTotal">0</div>
-          <div class="stat-label">授权码总数</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num" id="statUsed">0</div>
-          <div class="stat-label">已使用</div>
-        </div>
+        <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">授权码总数</div></div>
+        <div class="stat-card"><div class="stat-num" id="statUsed">0</div><div class="stat-label">已使用</div></div>
       </div>
-
       <div class="admin-section">
         <div class="admin-label">添加新授权码</div>
         <div class="admin-input-row">
-          <input type="text" class="admin-input" id="newCode" placeholder="例如：vip001" maxlength="20">
+          <input type="text" class="admin-input" id="newCode" placeholder="输入授权码">
           <button class="admin-btn-sm" onclick="addCode()">添加</button>
         </div>
       </div>
-
       <div class="admin-section">
         <div class="admin-label">授权码列表</div>
         <div class="code-list" id="codeList"></div>
       </div>
-
       <div class="admin-section">
         <div class="admin-label">批量生成授权码</div>
         <div class="admin-input-row">
-          <input type="number" class="admin-input" id="batchCount" placeholder="数量" value="5" min="1" max="100">
+          <input type="number" class="admin-input" id="batchCount" value="5" min="1" max="100">
           <button class="admin-btn-sm" onclick="batchGenerate()">生成</button>
         </div>
       </div>
-
-      <div style="text-align:center; margin-top:16px;">
-        <button class="admin-btn-sm gray" onclick="exportCodes()">导出授权码</button>
-        <button class="admin-btn-sm danger" onclick="clearAllCodes()" style="margin-left:8px;">清空全部</button>
-      </div>
+      <button class="admin-btn-sm gray" onclick="exportCodes()">导出授权码</button>
+      <button class="admin-btn-sm danger" onclick="clearAllCodes()" style="margin-left:8px;">清空全部</button>
     </div>
   </div>
 </div>
 
+<div class="topnav">
+  <div class="logo">
+    <div class="logo-icon">💃</div>
+    <div>
+      <div class="logo-text">AI舞蹈模仿</div>
+      <div class="logo-sub">人人皆可 AI 跳舞</div>
+    </div>
+  </div>
+  <div class="nav-right">
+    <button class="nav-btn" onclick="showAdminLogin()">管理</button>
+  </div>
+</div>
+
 <div class="container">
-  <div class="header">
-    <div class="logo">✨ AI舞蹈模仿</div>
-    <div class="subtitle">多模型 · 一键动作模仿 · 手机端即用</div>
+  <div class="hero">
+    <div class="hero-tag">✨ 多模型 · 一键动作模仿</div>
+    <div class="hero-title">让照片中的你<br>动起来</div>
+    <div class="hero-sub">上传人物照片 + 参考舞蹈视频<br>AI精准复刻每一个动作</div>
   </div>
 
-  <!-- Model Selector -->
-  <div class="model-selector">
+  <div class="banner">
+    <div class="banner-title">🎬 动作模仿创作</div>
+    <div class="banner-desc">上传一张清晰的人物照片，再上传一段舞蹈参考视频，AI会让照片中的人物完美复刻视频中的舞蹈动作。</div>
+    <div class="banner-features">
+      <span class="banner-feature">🎭 动作精准</span>
+      <span class="banner-feature">📱 手机即用</span>
+      <span class="banner-feature">⚡ 快速生成</span>
+      <span class="banner-feature">📥 一键导出</span>
+    </div>
+  </div>
+
+  <div class="section-title"><span class="icon">🎯</span> 选择AI模型</div>
+  <div class="model-scroll">
     <div class="model-card active" data-model="vidu" onclick="selectModel('vidu')">
-      <div class="model-icon">🎬</div>
-      <div class="model-name">Vidu</div>
-      <div class="model-desc">动作同步</div>
-      <div class="model-price">¥0.36/秒</div>
+      <div class="model-icon">🎬</div><div class="model-name">Vidu</div>
+      <div class="model-desc">动作同步</div><div class="model-price">¥0.36/秒</div>
       <div class="model-badge">便宜</div>
-    </div>
-    <div class="model-card" data-model="kling26" onclick="selectModel('kling26')">
-      <div class="model-icon">🔥</div>
-      <div class="model-name">可灵 2.6</div>
-      <div class="model-desc">动作控制</div>
-      <div class="model-price">¥0.5/秒起</div>
-    </div>
-    <div class="model-card" data-model="kling3" onclick="selectModel('kling3')">
-      <div class="model-icon">🚀</div>
-      <div class="model-name">可灵 3.0</div>
-      <div class="model-desc">动作控制</div>
-      <div class="model-price">¥0.9/秒起</div>
-      <div class="model-badge">高质</div>
     </div>
     <div class="model-card" data-model="jimeng" onclick="selectModel('jimeng')">
-      <div class="model-icon">🎭</div>
-      <div class="model-name">即梦 2.0</div>
-      <div class="model-desc">动作模仿</div>
-      <div class="model-price">¥0.4/秒</div>
+      <div class="model-icon">🎭</div><div class="model-name">即梦 2.0</div>
+      <div class="model-desc">动作模仿</div><div class="model-price">¥0.4/秒</div>
       <div class="model-badge">国产</div>
     </div>
+    <div class="model-card" data-model="kling26" onclick="selectModel('kling26')">
+      <div class="model-icon">🔥</div><div class="model-name">可灵 2.6</div>
+      <div class="model-desc">动作控制</div><div class="model-price">¥0.5/秒</div>
+    </div>
+    <div class="model-card" data-model="kling3" onclick="selectModel('kling3')">
+      <div class="model-icon">🚀</div><div class="model-name">可灵 3.0</div>
+      <div class="model-desc">高质量</div><div class="model-price">¥0.9/秒</div>
+      <div class="model-badge">高质</div>
+    </div>
     <div class="model-card" data-model="agnes" onclick="selectModel('agnes')">
-      <div class="model-icon">✨</div>
-      <div class="model-name">Agnes 2.5</div>
-      <div class="model-desc">视频参考</div>
-      <div class="model-price">¥0.36/秒起</div>
+      <div class="model-icon">✨</div><div class="model-name">Agnes 2.5</div>
+      <div class="model-desc">视频参考</div><div class="model-price">¥0.36/秒</div>
       <div class="model-badge">便宜</div>
     </div>
-  </div>
-
-  <!-- 密钥配置 -->
-  <div class="card">
-    <div class="card-title" onclick="toggleApiSection()">
-      <span class="icon">🔑</span> 密钥配置
-      <span style="margin-left:auto;font-size:11px;color:#666;" id="apiStatus">未配置</span>
+    <div class="model-card" onclick="showToast('通义万相即将上线，敬请期待！')">
+      <div class="model-icon">🌀</div><div class="model-name">通义万相</div>
+      <div class="model-desc">阿里出品</div><div class="model-price">即将上线</div>
+      <div class="model-badge soon">soon</div>
     </div>
-    <div class="collapsible show" id="apiSection">
-      <!-- Vidu -->
-      <div id="viduApi" class="api-config-block">
-        <div class="api-row">
-          <input type="password" class="text-input" id="viduToken" placeholder="Vidu 接口密钥（vd开头）">
-          <span class="api-toggle" onclick="togglePw('viduToken')">👁</span>
-        </div>
-        <div class="api-hint">密钥仅保存在本机浏览器，不会上传到任何服务器。<a href="https://platform.vidu.com/" target="_blank">没有密钥？点此注册获取 →</a></div>
-      </div>
-      <!-- 可灵 -->
-      <div id="klingApi" class="api-config-block" style="display:none;">
-        <div class="api-row">
-          <input type="password" class="text-input" id="klingApiKey" placeholder="可灵 接口密钥（API Key）">
-          <span class="api-toggle" onclick="togglePw('klingApiKey')">👁</span>
-        </div>
-        <div class="api-row">
-          <input type="password" class="text-input" id="klingSecretKey" placeholder="可灵 安全密钥（Secret Key）">
-          <span class="api-toggle" onclick="togglePw('klingSecretKey')">👁</span>
-        </div>
-        <div class="api-hint">系统自动换取访问令牌，无需手动操作。<a href="https://app.klingai.com/" target="_blank">没有密钥？点此注册获取 →</a></div>
-      </div>
-      <!-- 即梦 -->
-      <div id="jimengApi" class="api-config-block" style="display:none;">
-        <div class="api-row">
-          <input type="password" class="text-input" id="jimengAK" placeholder="即梦 Access Key（AK）">
-          <span class="api-toggle" onclick="togglePw('jimengAK')">👁</span>
-        </div>
-        <div class="api-row">
-          <input type="password" class="text-input" id="jimengSK" placeholder="即梦 Secret Key（SK）">
-          <span class="api-toggle" onclick="togglePw('jimengSK')">👁</span>
-        </div>
-        <div class="api-hint">火山引擎密钥，用于签名鉴权。<a href="https://console.volcengine.com/iam/keymanage/" target="_blank">没有密钥？点此注册获取 →</a></div>
-      </div>
-      <!-- Agnes -->
-      <div id="agnesApi" class="api-config-block" style="display:none;">
-        <div class="api-row">
-          <input type="password" class="text-input" id="agnesKey" placeholder="Agnes API Key">
-          <span class="api-toggle" onclick="togglePw('agnesKey')">👁</span>
-        </div>
-        <div class="api-hint">国际站API，支持视频参考生成。<a href="https://agnes-ai.com/" target="_blank">没有密钥？点此注册获取 →</a></div>
-      </div>
+    <div class="model-card" onclick="showToast('海螺AI即将上线，敬请期待！')">
+      <div class="model-icon">🐚</div><div class="model-name">海螺AI</div>
+      <div class="model-desc">MiniMax</div><div class="model-price">即将上线</div>
+      <div class="model-badge new">new</div>
+    </div>
+    <div class="model-card" onclick="showToast('Runway即将上线，敬请期待！')">
+      <div class="model-icon">🎨</div><div class="model-name">Runway</div>
+      <div class="model-desc">国际大牌</div><div class="model-price">即将上线</div>
+      <div class="model-badge soon">soon</div>
     </div>
   </div>
 
-  <!-- Upload -->
-  <div class="card">
+  <div class="create-card">
     <div class="card-title"><span class="icon">📤</span> 上传素材</div>
-    <div class="upload-grid">
+    <div class="upload-row">
       <div class="upload-box" id="imageBox" onclick="document.getElementById('imageInput').click()">
-        <div class="upload-icon">🖼️</div>
-        <div class="upload-text">人物参考图</div>
+        <div class="upload-icon">🖼️</div><div class="upload-text">人物参考图</div>
         <div class="upload-hint">清晰正面·竖版</div>
         <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImage(event)">
       </div>
       <div class="upload-box" id="videoBox" onclick="document.getElementById('videoInput').click()">
-        <div class="upload-icon">🎬</div>
-        <div class="upload-text">参考舞蹈视频</div>
+        <div class="upload-icon">🎬</div><div class="upload-text">参考舞蹈视频</div>
         <div class="upload-hint">全身动作·带音乐</div>
         <input type="file" id="videoInput" accept="video/*" style="display:none" onchange="handleVideo(event)">
       </div>
@@ -550,100 +441,69 @@ body {
       <div class="input-tab" onclick="switchVideoInput('url')">🔗 视频URL</div>
     </div>
     <div id="videoUrlSection" style="display:none;">
-      <input type="text" class="text-input" id="videoUrlInput" placeholder="粘贴参考视频公网URL（mp4/mov）" onchange="handleVideoUrl(event)">
-      <button class="parse-link-btn" onclick="openUrlParser()">🔗 抖音/快手链接解析 →</button>
+      <input type="text" class="text-input" id="videoUrlInput" placeholder="粘贴抖音/快手/B站视频直链" onchange="handleVideoUrl(event)">
+      <button class="parse-link-btn" onclick="openUrlParser()">🔧 没有直链？点此打开链接解析工具</button>
     </div>
-    <div class="tip-box">💡 人物图与参考视频人物身材比例尽量一致；输出分辨率跟随人物图，建议上传竖版图片。</div>
+    <div class="tip-bar">💡 人物图与参考视频人物身材比例尽量一致；输出分辨率跟随人物图，建议上传竖版图片。</div>
+    <button class="api-toggle" onclick="toggleApiSection()">⚙️ API密钥配置 <span id="apiStatus">未配置</span></button>
+    <div class="api-section" id="apiSection">
+      <div id="viduApi">
+        <div class="api-row"><span class="api-label">Vidu密钥</span><input type="password" class="text-input" id="viduToken" placeholder="输入Vidu API Token"></div>
+        <div class="api-hint">国际站API，支持视频参考生成。<a href="https://platform.vidu.com/" target="_blank">没有密钥？点此注册获取 →</a></div>
+      </div>
+      <div id="klingApi" style="display:none;">
+        <div class="api-row"><span class="api-label">接口密钥</span><input type="password" class="text-input" id="klingApiKey" placeholder="API Key"></div>
+        <div class="api-row"><span class="api-label">安全密钥</span><input type="password" class="text-input" id="klingSecretKey" placeholder="Secret Key"></div>
+        <div class="api-hint"><a href="https://app.klingai.com/" target="_blank">没有密钥？点此注册获取 →</a></div>
+        <div class="kling-only" style="margin-top:12px;">
+          <div class="mode-row">
+            <button class="mode-btn active" data-mode="std" onclick="selectMode('std')">标准模式</button>
+            <button class="mode-btn" data-mode="pro" onclick="selectMode('pro')">专业模式</button>
+          </div>
+          <div class="mode-row">
+            <button class="mode-btn active" data-orient="image" onclick="selectOrient('image')">人物朝向</button>
+            <button class="mode-btn" data-orient="video" onclick="selectOrient('video')">视频朝向</button>
+          </div>
+          <div class="checkbox-row"><input type="checkbox" id="klingSound"><label for="klingSound">保留参考视频原声</label></div>
+          <div class="api-row"><span class="api-label">附加提示词</span><input type="text" class="text-input" id="klingPrompt" placeholder="可选：描述画面风格"></div>
+        </div>
+      </div>
+      <div id="jimengApi" style="display:none;">
+        <div class="api-row"><span class="api-label">Access Key</span><input type="password" class="text-input" id="jimengAK" placeholder="火山引擎AK"></div>
+        <div class="api-row"><span class="api-label">Secret Key</span><input type="password" class="text-input" id="jimengSK" placeholder="火山引擎SK"></div>
+        <div class="api-hint">即梦2.0动作模仿，需在火山引擎开通视觉智能服务。<a href="https://console.volcengine.com/iam/keymanage/" target="_blank">点此获取密钥 →</a></div>
+      </div>
+      <div id="agnesApi" style="display:none;">
+        <div class="api-row"><span class="api-label">API Key</span><input type="password" class="text-input" id="agnesKey" placeholder="Agnes API Key"></div>
+        <div class="api-hint">Agnes视频参考生成，竖版720P。<a href="https://platform.agnes-ai.com/" target="_blank">没有密钥？点此注册获取 →</a></div>
+      </div>
+    </div>
   </div>
 
-  <!-- Params -->
-  <div class="card">
+  <div class="create-card">
     <div class="card-title"><span class="icon">⚙️</span> 生成参数</div>
-
-    <!-- Duration -->
-    <div class="param-group">
-      <div class="param-label">
-        <span>视频时长 <span id="autoBadge" style="display:inline-block;background:rgba(139,92,246,0.2);color:#c4b5fd;font-size:9px;padding:1px 5px;border-radius:3px;margin-left:4px;">自动</span></span>
-        <span class="param-value"><span id="durationValue">8</span>秒</span>
-      </div>
-      <input type="range" class="duration-slider" id="durationSlider" min="3" max="30" value="8" step="1" oninput="updateDuration(this.value)">
-      <div class="duration-hints"><span>3秒</span><span>10秒</span><span>20秒</span><span>30秒</span></div>
+    <div class="param-row">
+      <span class="param-label">视频时长 <span style="font-size:10px;color:var(--muted);">自动</span></span>
+      <span class="param-value"><span id="durationValue">8</span><span class="unit">秒</span></span>
     </div>
-
-    <!-- Kling Mode -->
-    <div class="param-group kling-only" style="display:none;">
-      <div class="param-label"><span>生成模式</span></div>
-      <div class="option-grid">
-        <div class="option-btn active" data-mode="std" onclick="selectMode('std')">
-          标准模式
-          <span class="option-sub">性价比高</span>
-        </div>
-        <div class="option-btn" data-mode="pro" onclick="selectMode('pro')">
-          专家模式
-          <span class="option-sub">质量更佳</span>
-        </div>
-      </div>
+    <input type="range" class="slider" id="durationSlider" min="2" max="30" value="8" oninput="updateDuration(this.value)">
+    <div class="slider-labels"><span>3秒</span><span>10秒</span><span>20秒</span><span>30秒</span></div>
+    <div class="cost-box">
+      <div class="cost-label"><span class="main">预计算力费</span>模型单价 <span id="costRate">¥0.36/秒</span></div>
+      <div class="cost-value">约<span id="costValue">2.88</span><span class="unit">元</span></div>
     </div>
-
-    <!-- Kling Orientation -->
-    <div class="param-group kling-only" style="display:none;">
-      <div class="param-label"><span>人物朝向</span></div>
-      <div class="option-grid">
-        <div class="option-btn active" data-orient="image" onclick="selectOrient('image')">
-          跟随图片
-          <span class="option-sub">≤10秒</span>
-        </div>
-        <div class="option-btn" data-orient="video" onclick="selectOrient('video')">
-          跟随视频
-          <span class="option-sub">≤30秒</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Kling Prompt -->
-    <div class="param-group kling-only" style="display:none;">
-      <div class="param-label"><span>提示词（可选，控制画风外观）</span></div>
-      <textarea class="textarea-input" id="klingPrompt" placeholder="例如：女孩穿着白色连衣裙，在海边跳舞，阳光明媚，电影质感"></textarea>
-    </div>
-
-    <!-- Kling Sound -->
-    <div class="param-group kling-only" style="display:none;">
-      <div class="switch-row">
-        <span class="switch-label">保留参考视频原声</span>
-        <label class="switch">
-          <input type="checkbox" id="klingSound" checked>
-          <span class="slider"></span>
-        </label>
-      </div>
-      <div style="font-size:10px;color:#555;">开启后生成视频自带参考视频音乐，无需额外混合</div>
-    </div>
-
-    <!-- Cost -->
-    <div class="cost-display">
-      <div class="cost-row">
-        <span class="cost-label">预计算力费</span>
-        <span class="cost-value" id="costValue">约2.88元</span>
-      </div>
-      <div class="cost-row">
-        <span class="cost-label" style="font-size:10px;">模型单价</span>
-        <span class="cost-sub" id="costRate">¥0.36/秒</span>
-      </div>
-    </div>
+    <button class="generate-btn" id="generateBtn" onclick="generate()">🚀 一键生成</button>
   </div>
 
-  <button class="generate-btn" id="generateBtn" onclick="generate()">🚀 一键生成</button>
-
-  <!-- Progress -->
-  <div class="card progress-card" id="progressCard">
-    <div class="card-title"><span class="icon">⏳</span> 生成进度</div>
+  <div class="progress-card" id="progressCard">
+    <div class="progress-title">⏳ 生成进度</div>
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
     <div class="progress-text" id="progressText">正在处理...</div>
     <div class="progress-status" id="progressStatus"></div>
   </div>
 
-  <!-- Result -->
-  <div class="card result-card" id="resultCard">
-    <div class="card-title"><span class="icon">✅</span> 生成完成</div>
+  <div class="result-card" id="resultCard">
+    <div class="result-title">✅ 生成完成</div>
     <div class="result-info" id="resultInfo"></div>
     <div class="result-tip" id="resultTip">📱 手机端：点击视频播放，长按视频可保存到相册</div>
     <video class="result-video" id="resultVideo" controls playsinline webkit-playsinline preload="auto" x5-playsinline></video>
@@ -655,7 +515,7 @@ body {
     </div>
   </div>
 
-  <div class="footer">Powered by Vidu & Kling · 动作控制模型 · 仅供学习交流</div>
+  <div class="footer">Powered by Vidu · 可灵 · 即梦 · Agnes<br>AI舞蹈模仿平台 · 动作控制模型 · 仅供学习交流</div>
 </div>
 
 <div class="toast" id="toast"></div>
