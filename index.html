@@ -564,14 +564,14 @@ body {
       </div>
     </div>
     <div class="input-tabs">
-      <div class="input-tab active" onclick="switchVideoInput('upload')">📁 上传文件</div>
-      <div class="input-tab" onclick="switchVideoInput('url')" style="position:relative;">🔗 视频URL <span style="position:absolute;top:-6px;right:-4px;background:#f59e0b;color:white;font-size:9px;padding:1px 5px;border-radius:6px;font-weight:700;">推荐</span></div>
+      <div class="input-tab active" onclick="switchVideoInput('upload')">📁 上传视频</div>
+      <div class="input-tab" onclick="switchVideoInput('url')" style="display:none;">🔗 视频URL</div>
     </div>
     <div id="videoUrlSection" style="display:none;">
       <input type="text" class="text-input" id="videoUrlInput" placeholder="粘贴抖音/快手/B站视频直链" onchange="handleVideoUrl(event)">
       <button class="parse-link-btn" onclick="openUrlParser()">🔧 没有直链？点此打开链接解析工具</button>
     </div>
-    <div class="tip-bar">💡 人物图与参考视频人物身材比例尽量一致；输出分辨率跟随人物图，建议上传竖版图片。<br><br>📱 <b>手机端推荐使用「视频URL」方式</b>（更稳定，无需上传）：点击上方「视频URL」标签，粘贴抖音/快手/B站视频直链即可。</div>
+    <div class="tip-bar">💡 人物图与参考视频人物身材比例尽量一致；输出分辨率跟随人物图，建议上传竖版图片。<br><br>📱 直接上传参考视频即可，系统会自动提取动作并生成舞蹈视频。</div>
     <button class="api-toggle" onclick="toggleApiSection()">⚙️ API密钥配置 <span id="apiStatus">未配置</span></button>
     <div class="api-section" id="apiSection">
       <div style="background:linear-gradient(135deg,#ecfdf5,#f0fdfa);border:1px solid #a7f3d0;border-radius:10px;padding:10px 14px;margin-bottom:14px;text-align:center;">
@@ -1584,13 +1584,12 @@ async function uploadToCatbox(file) {
       errorMsg += `❌ GitHub存储上传失败：${githubError}\n`;
     }
     errorMsg += `❌ 已尝试${uploaders.length}个免费上传服务均失败\n\n`;
-    errorMsg += `✅ 强烈推荐：改用"视频URL"方式（最稳定，无需上传）\n`;
-    errorMsg += `   点击"视频URL"标签，粘贴抖音/快手/B站视频直链即可。\n\n`;
-    errorMsg += `其他建议：\n`;
-    errorMsg += `1) 压缩视频到20MB以内\n`;
+    errorMsg += `✅ 解决方法：\n`;
+    errorMsg += `1) 压缩视频到20MB以内（用剪映/微信压缩）\n`;
     errorMsg += `2) 切换WiFi/流量重试\n`;
-    errorMsg += `3) 用电脑端操作\n`;
-    errorMsg += `4) 视频较长时建议用URL方式`;
+    errorMsg += `3) 用电脑端操作（上传更稳定）\n`;
+    errorMsg += `4) 视频较长时建议剪短到10秒以内\n`;
+    errorMsg += `5) 联系卖家获取技术支持`;
     throw new Error(errorMsg);
   }
 }
