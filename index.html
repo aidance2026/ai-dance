@@ -602,6 +602,8 @@ body {
       <div id="jimengApi" style="display:none;">
         <div class="api-row"><span class="api-label">Access Key</span><input type="password" class="text-input" id="jimengAK" placeholder="火山引擎AK"></div>
         <div class="api-row"><span class="api-label">Secret Key</span><input type="password" class="text-input" id="jimengSK" placeholder="火山引擎SK"></div>
+        <div class="api-row"><span class="api-label">代理地址</span><input type="text" class="text-input" id="jimengProxy" placeholder="Cloudflare Worker地址（解决跨域，可选）"></div>
+        <div class="api-tip">💡 即梦API需配置代理地址才能使用，<a href="https://workers.cloudflare.com" target="_blank" style="color:var(--primary);">免费创建Worker</a>，代码见平台说明</div>
         <div class="api-hint">即梦2.0动作模仿，需在火山引擎开通视觉智能服务。<a href="https://console.volcengine.com/iam/keymanage/" target="_blank">点此获取密钥 →</a></div>
       </div>
       <div id="agnesApi" style="display:none;">
@@ -1079,18 +1081,21 @@ window.onload = function() {
   if (jak) document.getElementById('jimengAK').value = jak;
   const jsk = localStorage.getItem('jimeng_sk');
   if (jsk) document.getElementById('jimengSK').value = jsk;
+  const jproxy = localStorage.getItem('jimeng_proxy');
+  if (jproxy) document.getElementById('jimengProxy').value = jproxy;
   if (jak || jsk) updateApiStatus();
   const agnes = localStorage.getItem('agnes_key');
   if (agnes) { document.getElementById('agnesKey').value = agnes; updateApiStatus(); }
 };
 
-['viduToken','klingApiKey','klingSecretKey','jimengAK','jimengSK','agnesKey'].forEach(id => {
+['viduToken','klingApiKey','klingSecretKey','jimengAK','jimengSK','jimengProxy','agnesKey'].forEach(id => {
   document.getElementById(id).addEventListener('change', function() {
     if (id === 'viduToken') localStorage.setItem('vidu_token', this.value);
     if (id === 'klingApiKey') localStorage.setItem('kling_api_key', this.value);
     if (id === 'klingSecretKey') localStorage.setItem('kling_secret_key', this.value);
     if (id === 'jimengAK') localStorage.setItem('jimeng_ak', this.value);
     if (id === 'jimengSK') localStorage.setItem('jimeng_sk', this.value);
+    if (id === 'jimengProxy') localStorage.setItem('jimeng_proxy', this.value);
     if (id === 'agnesKey') localStorage.setItem('agnes_key', this.value);
     updateApiStatus();
   });
@@ -1943,7 +1948,16 @@ async function volcSign(ak, sk, method, queryString, body) {
 async function generateJimeng(videoUrl) {
   const ak = document.getElementById('jimengAK').value.trim();
   const sk = document.getElementById('jimengSK').value.trim();
+  const proxy = document.getElementById('jimengProxy').value.trim();
   if (!ak || !sk) throw new Error('请先配置即梦Access Key和Secret Key');
+
+  // 代理URL构建函数
+  function buildProxyUrl(targetUrl) {
+    if (!proxy) return targetUrl;
+    // 去掉末尾斜杠
+    const proxyBase = proxy.replace(/\/$/, '');
+    return proxyBase + '/?url=' + encodeURIComponent(targetUrl);
+  }
 
   // 上传视频到catbox
   if (state.videoInputMode === 'upload' && !videoUrl) {
@@ -1970,7 +1984,8 @@ async function generateJimeng(videoUrl) {
   const submitQuery = 'Action=CVSync2AsyncSubmitTask&Version=2022-08-31';
   const submitHeaders = await volcSign(ak, sk, 'POST', submitQuery, submitBody);
 
-  const submitRes = await fetchWithTimeout(JIMENG_API + '?' + submitQuery, {
+  const submitUrl = buildProxyUrl(JIMENG_API + '?' + submitQuery);
+  const submitRes = await fetchWithTimeout(submitUrl, {
     method: 'POST',
     headers: submitHeaders,
     body: submitBody
@@ -1997,7 +2012,8 @@ async function generateJimeng(videoUrl) {
       const queryQuery = 'Action=CVSync2AsyncGetResult&Version=2022-08-31';
       const queryHeaders = await volcSign(ak, sk, 'POST', queryQuery, queryBody);
 
-      const res = await fetchWithTimeout(JIMENG_API + '?' + queryQuery, {
+      const queryUrl = buildProxyUrl(JIMENG_API + '?' + queryQuery);
+      const res = await fetchWithTimeout(queryUrl, {
         method: 'POST',
         headers: queryHeaders,
         body: queryBody
