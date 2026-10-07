@@ -193,6 +193,19 @@ body {
   width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #10b981, #14b8a6); cursor: pointer; border: none;
 }
 .slider-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); }
+.resolution-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.resolution-btn {
+  flex: 1; padding: 10px 6px; border-radius: 10px; border: 2px solid var(--border);
+  background: white; text-align: center; cursor: pointer; transition: all 0.2s;
+}
+.resolution-btn.active {
+  border-color: var(--primary); background: linear-gradient(135deg, #ecfdf5, #f0fdfa);
+  box-shadow: 0 2px 10px rgba(16,185,129,0.15);
+}
+.resolution-btn .res-name { font-size: 14px; font-weight: 800; color: var(--text); }
+.resolution-btn.active .res-name { color: var(--primary-dark); }
+.resolution-btn .res-desc { font-size: 9px; color: var(--muted); margin-top: 2px; }
+.resolution-hint { font-size: 10px; color: var(--muted); margin-bottom: 12px; line-height: 1.4; }
 .cost-box {
   background: linear-gradient(135deg, #ecfdf5, #f0fdfa); border-radius: 12px; padding: 14px;
   margin: 14px 0; border: 1px solid rgba(16,185,129,0.15); display: flex; justify-content: space-between; align-items: center;
@@ -602,6 +615,26 @@ body {
     </div>
     <input type="range" class="slider" id="durationSlider" min="2" max="30" value="8" oninput="updateDuration(this.value)">
     <div class="slider-labels"><span>3秒</span><span>10秒</span><span>20秒</span><span>30秒</span></div>
+    
+    <div class="param-row" style="margin-top:16px;">
+      <span class="param-label">输出分辨率</span>
+    </div>
+    <div class="resolution-row">
+      <div class="resolution-btn active" data-res="480p" onclick="selectResolution('480p')">
+        <div class="res-name">480P</div>
+        <div class="res-desc">标清·快</div>
+      </div>
+      <div class="resolution-btn" data-res="720p" onclick="selectResolution('720p')">
+        <div class="res-name">720P</div>
+        <div class="res-desc">高清·推荐</div>
+      </div>
+      <div class="resolution-btn" data-res="1080p" onclick="selectResolution('1080p')">
+        <div class="res-name">1080P</div>
+        <div class="res-desc">全高清·慢</div>
+      </div>
+    </div>
+    <div class="resolution-hint" id="resolutionHint">Agnes模型支持分辨率选择；其他模型分辨率跟随人物图</div>
+    
     <div class="cost-box">
       <div class="cost-label"><span class="main">预计算力费</span>模型单价 <span id="costRate">¥0.36/秒</span></div>
       <div class="cost-value">约<span id="costValue">2.88</span><span class="unit">元</span></div>
@@ -700,6 +733,7 @@ let state = {
   resultVideoUrl: null,
   ffmpegLoaded: false,
   template: null,
+  resolution: '480p',
 };
 
 // ============ 卖家管理配置 ============
@@ -1097,6 +1131,17 @@ function selectModel(model) {
   }
   // 混合原声按钮
   document.getElementById('mixAudioBtn').style.display = cfg.hasSound ? 'none' : 'block';
+  // 更新分辨率提示
+  const hint = document.getElementById('resolutionHint');
+  if (hint) {
+    if (model === 'agnes') {
+      hint.textContent = `当前${state.resolution.toUpperCase()}分辨率；Agnes模型支持分辨率选择`;
+      hint.style.color = 'var(--primary-dark)';
+    } else {
+      hint.textContent = `${state.resolution.toUpperCase()}已选择；当前模型分辨率跟随人物图，建议上传对应比例的图片`;
+      hint.style.color = 'var(--muted)';
+    }
+  }
   updateCost();
   updateApiStatus();
 }
@@ -1131,6 +1176,22 @@ function selectTemplate(tplKey) {
   infoBar.innerHTML = `🎭 已选择「${tpl.icon} ${tpl.name}」模板 — ${tpl.desc}。提示词已自动填充，可在API配置中查看修改。`;
   infoBar.classList.add('show');
   showToast(`已选择${tpl.name}模板，提示词已自动填充`);
+}
+
+function selectResolution(res) {
+  state.resolution = res;
+  document.querySelectorAll('.resolution-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.res === res);
+  });
+  // 更新提示
+  const hint = document.getElementById('resolutionHint');
+  if (state.model === 'agnes') {
+    hint.textContent = `已选择${res.toUpperCase()}分辨率，Agnes模型将按此分辨率生成`;
+    hint.style.color = 'var(--primary-dark)';
+  } else {
+    hint.textContent = `${res.toUpperCase()}已选择；当前模型分辨率跟随人物图，建议上传对应比例的图片`;
+    hint.style.color = 'var(--muted)';
+  }
 }
 
 function selectMode(mode) {
@@ -1902,12 +1963,14 @@ async function generateAgnes(videoUrl) {
 
   // 创建任务
   const duration = Math.min(Math.max(state.duration, 4), 12);
+  const resMap = { '480p': '480P', '720p': '720P', '1080p': '1080P' };
+  const resolution = resMap[state.resolution] || '720P';
   const body = JSON.stringify({
     model: 'agnes-video-2.5',
     prompt: '参考 <Video 1> 中的人物动作和舞蹈节奏，保持 <Picture 1> 中的人物外观、服装和面部特征一致，自然流畅地完成相同的舞蹈动作，竖版构图',
     mode: 'reference',
     seconds: duration.toString(),
-    size: '720P',
+    size: resolution,
     aspect_ratio: '9:16',
     images: [imageUrl],
     videos: [{
