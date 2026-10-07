@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cloudflare Worker 代理部署指南</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0fdf4; color: #1f2937; line-height: 1.6; }
+  .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+  .header { text-align: center; padding: 40px 20px; background: linear-gradient(135deg, #10b981, #059669); color: white; border-radius: 16px; margin-bottom: 30px; }
+  .header h1 { font-size: 28px; margin-bottom: 10px; }
+  .header p { opacity: 0.9; }
+  .step { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  .step-number { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: #10b981; color: white; border-radius: 50%; font-weight: bold; margin-right: 12px; }
+  .step-title { font-size: 20px; font-weight: bold; margin-bottom: 16px; display: flex; align-items: center; }
+  .step-content { padding-left: 48px; }
+  .step-content p { margin-bottom: 12px; }
+  .step-content ol, .step-content ul { padding-left: 20px; margin-bottom: 12px; }
+  .step-content li { margin-bottom: 8px; }
+  .code-block { background: #1f2937; color: #e5e7eb; padding: 16px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 13px; overflow-x: auto; margin: 12px 0; white-space: pre-wrap; word-break: break-all; }
+  .highlight { background: #fef3c7; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
+  .tip { background: #ecfdf5; border-left: 4px solid #10b981; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 12px 0; }
+  .warning { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 12px 0; }
+  .btn { display: inline-block; background: #10b981; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 500; margin: 8px 0; }
+  .btn:hover { background: #059669; }
+  .footer { text-align: center; padding: 30px; color: #6b7280; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🚀 Cloudflare Worker 代理部署指南</h1>
+    <p>3步搞定，免费使用，解决即梦/可灵API跨域问题</p>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-number">1</span>注册 Cloudflare 账号</div>
+    <div class="step-content">
+      <p>访问 Cloudflare 官网并注册账号（免费）：</p>
+      <a href="https://dash.cloudflare.com/sign-up" target="_blank" class="btn">前往 Cloudflare 注册 →</a>
+      <div class="tip">
+        💡 用邮箱注册即可，不需要绑定信用卡，Worker 免费额度每天 10 万次请求，完全够用。
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-number">2</span>创建 Worker 并粘贴代码</div>
+    <div class="step-content">
+      <ol>
+        <li>登录后，点击左侧菜单的 <span class="highlight">Workers & Pages</span></li>
+        <li>点击 <span class="highlight">Create application</span> → <span class="highlight">Create Worker</span></li>
+        <li>给 Worker 起个名字（如 <code>api-proxy</code>），点击 <span class="highlight">Deploy</span></li>
+        <li>部署成功后，点击 <span class="highlight">Edit code</span> 进入代码编辑页面</li>
+        <li><strong>删除默认代码</strong>，粘贴下面的完整代码：</li>
+      </ol>
+      <div class="code-block" id="workerCode">// Cloudflare Worker - API CORS代理
+// 解决即梦/可灵等API跨域问题
+addEventListener('fetch', event => {
+  event.respondWith(handleRequest(event.request))
+})
+
+async function handleRequest(request) {
+  // 处理CORS预检请求
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Date, X-Content-Sha256, X-Requested-With',
+        'Access-Control-Max-Age': '86400'
+      }
+    })
+  }
+
+  const url = new URL(request.url)
+  let targetUrl = url.searchParams.get('url')
+  
+  if (!targetUrl) {
+    const path = url.pathname.replace(/^\/proxy\//, '')
+    targetUrl = 'https://visual.volcengineapi.com' + (path || '/') + url.search
+  }
+
+  try {
+    const headers = new Headers(request.headers)
+    headers.delete('host')
+    headers.delete('origin')
+    headers.delete('referer')
+
+    const response = await fetch(targetUrl, {
+      method: request.method,
+      headers: headers,
+      body: request.method !== 'GET' && request.method !== 'HEAD' ? await request.arrayBuffer() : undefined
+    })
+
+    const responseHeaders = new Headers(response.headers)
+    responseHeaders.set('Access-Control-Allow-Origin', '*')
+    responseHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    responseHeaders.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Date, X-Content-Sha256, X-Requested-With')
+    responseHeaders.delete('content-security-policy')
+    responseHeaders.delete('x-frame-options')
+
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: responseHeaders
+    })
+  } catch (error) {
+    return new Response(JSON.stringify({
+      error: 'Proxy Error',
+      message: error.message,
+      target: targetUrl
+    }), {
+      status: 502,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
+    })
+  }
+}</div>
+      <p>点击右上角的 <span class="highlight">Deploy</span> 按钮保存代码。</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-number">3</span>获取 Worker 地址并配置到平台</div>
+    <div class="step-content">
+      <ol>
+        <li>部署成功后，在 Worker 详情页可以看到你的 Worker 地址，格式如下：</li>
+      </ol>
+      <div class="code-block">https://你的worker名.你的用户名.workers.dev</div>
+      <ol start="2">
+        <li>复制这个地址</li>
+        <li>打开 AI舞蹈模仿平台，选择 <span class="highlight">即梦</span> 模型</li>
+        <li>展开 <span class="highlight">API密钥配置</span></li>
+        <li>在 <span class="highlight">代理地址</span> 输入框中粘贴刚才复制的 Worker 地址</li>
+        <li>填入你的即梦 AK 和 SK</li>
+        <li>点击生成，即可正常使用！</li>
+      </ol>
+      <div class="warning">
+        ⚠️ 注意：Worker 地址不要加末尾的斜杠，直接复制完整地址即可。
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-number">✓</span>验证是否成功</div>
+    <div class="step-content">
+      <p>配置完成后，在即梦模型下点击生成，如果：</p>
+      <ul>
+        <li>✅ 显示"任务已提交，等待生成..." → 代理配置成功！</li>
+        <li>❌ 还是显示"网络连接失败" → 检查 Worker 地址是否正确，代码是否完整粘贴</li>
+      </ul>
+      <div class="tip">
+        💡 同一个 Worker 可以同时给即梦和可灵使用，不需要创建多个。
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>AI舞蹈模仿平台 · Cloudflare Worker 代理部署指南</p>
+    <p style="margin-top: 8px;">免费 · 快速 · 稳定</p>
+  </div>
+</div>
+</body>
+</html>
