@@ -759,8 +759,9 @@ async function uploadToGithub(file) {
   }, 30000);
   
   if (res.ok) {
-    // 返回raw链接
-    return `https://raw.githubusercontent.com/${cfg.username}/${cfg.repo}/${cfg.branch}/${path}`;
+    // 返回jsDelivr CDN链接（全球CDN加速，API访问更稳定）
+    // 格式：https://cdn.jsdelivr.net/gh/用户名/仓库名@分支/文件路径
+    return `https://cdn.jsdelivr.net/gh/${cfg.username}/${cfg.repo}@${cfg.branch}/${path}`;
   }
   
   throw new Error('GitHub upload failed: ' + res.status);
