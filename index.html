@@ -612,7 +612,7 @@ body {
       </div>
       <div id="wanApi" style="display:none;">
         <div class="api-row"><span class="api-label">DashScope API Key</span><input type="password" class="text-input" id="wanKey" placeholder="阿里云百炼API Key"></div>
-        <div class="api-hint">万相wan2.2-animate-move图生动作，支持480P/720P/1080P。<a href="https://dashscope.console.aliyun.com/apiKey" target="_blank">没有密钥？点此注册获取 →</a></div>
+        <div class="api-hint">万相wan2.2-animate-move图生动作，支持480P/720P/1080P。<a href="https://bailian.console.aliyun.com/" target="_blank">没有密钥？点此注册获取 →</a></div>
       </div>
     </div>
   </div>
@@ -2312,7 +2312,7 @@ async function generateWan(videoUrl) {
       const status = queryData.output?.task_status || queryData.task_status;
       if (status === 'SUCCEEDED') {
         clearInterval(state.pollTimer);
-        const videoUrl = queryData.output?.video_url;
+        const videoUrl = queryData.output?.results?.video_url;
         if (!videoUrl) throw new Error('未获取到视频地址');
         state.resultVideoUrl = videoUrl;
         showResult(videoUrl, `${MODELS[state.model].name} 生成完成，${resolution}竖版，时长${duration}秒`);
