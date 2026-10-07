@@ -276,11 +276,12 @@ body {
 .toast {
   position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
   background: rgba(0,0,0,0.85); color: white; padding: 12px 24px; border-radius: 12px;
-  font-size: 14px; z-index: 1000; transition: transform 0.3s; max-width: 90%; text-align: center;
+  font-size: 14px; z-index: 1000; transition: transform 0.3s; max-width: 92%; text-align: center;
+  line-height: 1.6;
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
 .toast.success { background: var(--success); }
-.toast.error { background: var(--danger); }
+.toast.error { background: var(--danger); text-align: left; padding: 16px 20px; max-width: 94%; }
 .access-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 200;
   background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
@@ -1113,8 +1114,12 @@ function updateApiStatus() {
 // ============ 工具 ============
 function showToast(msg, type = '') {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'toast show ' + type;
-  setTimeout(() => { t.className = 'toast ' + type; }, 3000);
+  // 支持多行显示
+  t.innerHTML = msg.replace(/\n/g, '<br>');
+  t.className = 'toast show ' + type;
+  // 错误信息显示更长时间
+  const duration = type === 'error' ? 8000 : 3000;
+  setTimeout(() => { t.className = 'toast ' + type; }, duration);
 }
 function togglePw(id) {
   const el = document.getElementById(id);
@@ -1703,7 +1708,19 @@ async function generate() {
     }
   } catch (err) {
     console.error(err);
-    showToast(err.message || '生成失败', 'error');
+    const modelNames = { vidu: 'Vidu', kling: '可灵', jimeng: '即梦', agnes: 'Agnes' };
+    const modelName = modelNames[state.model] || state.model;
+    let errorMsg = err.message || '生成失败';
+    // 如果是网络错误，添加针对性建议
+    if (errorMsg.includes('网络连接失败') || errorMsg.includes('Failed to fetch') || errorMsg.includes('超时')) {
+      errorMsg += `\n\n✅ 解决方法：\n`;
+      errorMsg += `1) 检查API密钥是否正确配置\n`;
+      errorMsg += `2) 切换WiFi/流量重试\n`;
+      errorMsg += `3) 切换其他模型试试（当前：${modelName}）\n`;
+      errorMsg += `4) 稍后重试（可能是API服务器临时故障）\n`;
+      errorMsg += `5) 用电脑端操作（网络更稳定）`;
+    }
+    showToast(errorMsg, 'error');
     resetBtn();
     setGeneratingUI(false);
   }
