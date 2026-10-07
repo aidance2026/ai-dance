@@ -602,8 +602,8 @@ body {
       <div id="jimengApi" style="display:none;">
         <div class="api-row"><span class="api-label">Access Key</span><input type="password" class="text-input" id="jimengAK" placeholder="火山引擎AK"></div>
         <div class="api-row"><span class="api-label">Secret Key</span><input type="password" class="text-input" id="jimengSK" placeholder="火山引擎SK"></div>
-        <div class="api-row"><span class="api-label">代理地址</span><input type="text" class="text-input" id="jimengProxy" placeholder="Cloudflare Worker地址（解决跨域，可选）"></div>
-        <div class="api-tip">💡 即梦API需配置代理地址才能使用，<a href="https://workers.cloudflare.com" target="_blank" style="color:var(--primary);">免费创建Worker</a>，代码见平台说明</div>
+        <div class="api-row"><span class="api-label">代理地址</span><input type="text" class="text-input" id="jimengProxy" placeholder="留空使用公共代理（推荐），或填Cloudflare Worker地址"></div>
+        <div class="api-tip">💡 即梦API需通过代理调用，留空自动使用公共CORS代理（3个自动降级）；追求稳定可自行部署Cloudflare Worker</div>
         <div class="api-hint">即梦2.0动作模仿，需在火山引擎开通视觉智能服务。<a href="https://console.volcengine.com/iam/keymanage/" target="_blank">点此获取密钥 →</a></div>
       </div>
       <div id="agnesApi" style="display:none;">
@@ -1945,12 +1945,37 @@ async function generateJimeng(videoUrl) {
   const proxy = document.getElementById('jimengProxy').value.trim();
   if (!ak || !sk) throw new Error('请先配置即梦Access Key和Secret Key');
 
+  // 公共CORS代理列表（用户未配置自定义代理时自动使用）
+  const PUBLIC_PROXIES = [
+    'https://corsproxy.io/?url=',
+    'https://api.allorigins.win/raw?url=',
+    'https://thingproxy.freeboard.io/fetch/'
+  ];
+  let currentProxyIndex = 0;
+
   // 代理URL构建函数
   function buildProxyUrl(targetUrl) {
-    if (!proxy) return targetUrl;
-    // 去掉末尾斜杠
-    const proxyBase = proxy.replace(/\/$/, '');
-    return proxyBase + '/?url=' + encodeURIComponent(targetUrl);
+    if (proxy) {
+      // 用户自定义代理（Cloudflare Worker）
+      const proxyBase = proxy.replace(/\/$/, '');
+      return proxyBase + '/?url=' + encodeURIComponent(targetUrl);
+    }
+    // 使用公共CORS代理
+    const publicProxy = PUBLIC_PROXIES[currentProxyIndex % PUBLIC_PROXIES.length];
+    if (publicProxy.includes('thingproxy')) {
+      return publicProxy + targetUrl; // thingproxy不需要encodeURIComponent
+    }
+    return publicProxy + encodeURIComponent(targetUrl);
+  }
+
+  // 切换到下一个代理
+  function nextProxy() {
+    currentProxyIndex++;
+    if (currentProxyIndex < PUBLIC_PROXIES.length) {
+      updateProgress(-1, `代理${currentProxyIndex}失败，尝试代理${currentProxyIndex + 1}...`);
+      return true;
+    }
+    return false;
   }
 
   // 上传视频到catbox
@@ -1978,13 +2003,27 @@ async function generateJimeng(videoUrl) {
   const submitQuery = 'Action=CVSync2AsyncSubmitTask&Version=2022-08-31';
   const submitHeaders = await volcSign(ak, sk, 'POST', submitQuery, submitBody);
 
-  const submitUrl = buildProxyUrl(JIMENG_API + '?' + submitQuery);
-  const submitRes = await fetchWithTimeout(submitUrl, {
-    method: 'POST',
-    headers: submitHeaders,
-    body: submitBody
-  });
-  const submitData = await submitRes.json();
+  // 提交任务（带代理重试）
+  let submitData = null;
+  const maxRetries = proxy ? 1 : 3; // 自定义代理只试1次，公共代理试3次
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const submitUrl = buildProxyUrl(JIMENG_API + '?' + submitQuery);
+      const submitRes = await fetchWithTimeout(submitUrl, {
+        method: 'POST',
+        headers: submitHeaders,
+        body: submitBody
+      }, 20000);
+      submitData = await submitRes.json();
+      break; // 成功，跳出循环
+    } catch (e) {
+      if (attempt < maxRetries - 1 && !proxy) {
+        nextProxy();
+        continue; // 尝试下一个代理
+      }
+      throw new Error('网络连接失败（所有代理均不可用），请检查网络或配置自定义代理');
+    }
+  }
 
   if (submitData.code !== 10000 || !submitData.data || !submitData.data.task_id) {
     throw new Error(submitData.message || '任务提交失败');
@@ -2006,13 +2045,28 @@ async function generateJimeng(videoUrl) {
       const queryQuery = 'Action=CVSync2AsyncGetResult&Version=2022-08-31';
       const queryHeaders = await volcSign(ak, sk, 'POST', queryQuery, queryBody);
 
-      const queryUrl = buildProxyUrl(JIMENG_API + '?' + queryQuery);
-      const res = await fetchWithTimeout(queryUrl, {
-        method: 'POST',
-        headers: queryHeaders,
-        body: queryBody
-      }, 15000);
-      const data = await res.json();
+      // 查询任务（带代理重试）
+      let data = null;
+      const queryMaxRetries = proxy ? 1 : 2;
+      for (let qAttempt = 0; qAttempt < queryMaxRetries; qAttempt++) {
+        try {
+          const queryUrl = buildProxyUrl(JIMENG_API + '?' + queryQuery);
+          const res = await fetchWithTimeout(queryUrl, {
+            method: 'POST',
+            headers: queryHeaders,
+            body: queryBody
+          }, 15000);
+          data = await res.json();
+          break;
+        } catch (e) {
+          if (qAttempt < queryMaxRetries - 1 && !proxy) {
+            nextProxy();
+            continue;
+          }
+          // 查询失败不立即报错，继续下一轮查询
+          return;
+        }
+      }
 
       if (data.code !== 10000) {
         clearInterval(state.pollTimer);
