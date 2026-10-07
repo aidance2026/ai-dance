@@ -564,14 +564,14 @@ body {
       </div>
     </div>
     <div class="input-tabs">
-      <div class="input-tab active" onclick="switchVideoInput('upload')">📁 上传视频</div>
-      <div class="input-tab" onclick="switchVideoInput('url')" style="display:none;">🔗 视频URL</div>
+      <div class="input-tab" onclick="switchVideoInput('upload')">📁 上传视频</div>
+      <div class="input-tab active" onclick="switchVideoInput('url')">🔗 视频链接</div>
     </div>
-    <div id="videoUrlSection" style="display:none;">
-      <input type="text" class="text-input" id="videoUrlInput" placeholder="粘贴抖音/快手/B站视频直链" onchange="handleVideoUrl(event)">
+    <div id="videoUrlSection" style="display:block;">
+      <input type="text" class="text-input" id="videoUrlInput" placeholder="粘贴视频直链（以http/https开头的.mp4链接）" onchange="handleVideoUrl(event)">
       <button class="parse-link-btn" onclick="openUrlParser()">🔧 没有直链？点此打开链接解析工具</button>
     </div>
-    <div class="tip-bar">💡 人物图与参考视频人物身材比例尽量一致；输出分辨率跟随人物图，建议上传竖版图片。<br><br>📱 直接上传参考视频即可，系统会自动提取动作并生成舞蹈视频。</div>
+    <div class="tip-bar">💡 人物图与参考视频人物身材比例尽量一致；输出分辨率跟随人物图，建议上传竖版图片。<br><br>🔗 <b>默认使用视频链接方式</b>（最稳定，无需上传）：直接粘贴视频直链即可。也可点击「📁 上传视频」使用本地文件。</div>
     <button class="api-toggle" onclick="toggleApiSection()">⚙️ API密钥配置 <span id="apiStatus">未配置</span></button>
     <div class="api-section" id="apiSection">
       <div style="background:linear-gradient(135deg,#ecfdf5,#f0fdfa);border:1px solid #a7f3d0;border-radius:10px;padding:10px 14px;margin-bottom:14px;text-align:center;">
@@ -724,7 +724,7 @@ let state = {
   videoFile: null,
   videoObjectUrl: null,
   videoUrl: null,
-  videoInputMode: 'upload',
+  videoInputMode: 'url',
   duration: 8,
   videoDuration: null,
   klingMode: 'std',
