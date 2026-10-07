@@ -796,11 +796,25 @@ async function uploadToGithub(file) {
   }, 30000);
   
   if (res.ok) {
-    // 返回Fastly CDN链接（全球CDN加速，API访问更稳定）
-    return `https://fastly.jsdelivr.net/gh/${cfg.username}/${cfg.repo}@${cfg.branch}/${path}`;
+    // 等待CDN缓存生效（刚上传的文件CDN需要时间同步）
+    const cdnUrl = `https://fastly.jsdelivr.net/gh/${cfg.username}/${cfg.repo}@${cfg.branch}/${path}`;
+    // 等待2秒让CDN缓存
+    await new Promise(r => setTimeout(r, 2000));
+    // 验证CDN链接是否可访问
+    try {
+      const checkRes = await fetchWithTimeout(cdnUrl, { method: 'HEAD' }, 10000);
+      if (!checkRes.ok) {
+        // CDN还没缓存，再等3秒
+        await new Promise(r => setTimeout(r, 3000));
+      }
+    } catch(e) {
+      // 检查失败也再等一下
+      await new Promise(r => setTimeout(r, 2000));
+    }
+    return cdnUrl;
   }
   
-  throw new Error('GitHub upload failed: ' + res.status);
+  throw new Error('GitHub上传失败: HTTP ' + res.status);
 }
 
 // 获取所有授权码（默认 + 自定义）
@@ -1380,21 +1394,24 @@ function updateCost() {
   document.getElementById('costRate').textContent = `¥${cfg.rate}/秒`;
 }
 
-// ============ 多服务并行上传（国内优化版v2） ============
+// ============ 多服务并行上传（国内优化版v3） ============
 async function uploadToCatbox(file) {
   const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
+  let githubError = null;
   
   // 优先使用GitHub上传（如果卖家配置了，国内稳定访问）
   const ghCfg = getGithubConfig();
   if (ghCfg.enabled && ghCfg.token) {
     try {
       console.log('使用GitHub上传...');
+      updateProgress(5, '正在上传参考视频（GitHub存储）...');
       const githubUrl = await uploadToGithub(file);
       if (githubUrl) {
         console.log('GitHub上传成功:', githubUrl);
         return githubUrl;
       }
     } catch (err) {
+      githubError = err.message;
       console.warn('GitHub上传失败，尝试免费服务:', err.message);
     }
   }
@@ -1562,7 +1579,19 @@ async function uploadToCatbox(file) {
     return result.url;
   } catch (err) {
     // 全部失败
-    throw new Error(`文件上传失败（${fileSizeMB}MB），已尝试${uploaders.length}个上传服务均失败。\n\n✅ 推荐方案：改用"视频URL"方式（最稳定，无需上传）\n   点击"视频URL"标签，粘贴抖音/快手/B站视频直链\n\n其他建议：\n1) 压缩视频到10MB以内\n2) 切换WiFi/流量重试\n3) 用电脑端操作\n4) 视频较长时建议用URL方式`);
+    let errorMsg = `文件上传失败（${fileSizeMB}MB）\n\n`;
+    if (githubError) {
+      errorMsg += `❌ GitHub存储上传失败：${githubError}\n`;
+    }
+    errorMsg += `❌ 已尝试${uploaders.length}个免费上传服务均失败\n\n`;
+    errorMsg += `✅ 强烈推荐：改用"视频URL"方式（最稳定，无需上传）\n`;
+    errorMsg += `   点击"视频URL"标签，粘贴抖音/快手/B站视频直链即可。\n\n`;
+    errorMsg += `其他建议：\n`;
+    errorMsg += `1) 压缩视频到20MB以内\n`;
+    errorMsg += `2) 切换WiFi/流量重试\n`;
+    errorMsg += `3) 用电脑端操作\n`;
+    errorMsg += `4) 视频较长时建议用URL方式`;
+    throw new Error(errorMsg);
   }
 }
 
