@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>API配置教程 - AI舞蹈模仿平台</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: linear-gradient(180deg, #f0fdf4 0%, #ecfdf5 30%, #f0fdfa 100%);
+  color: #1f2937; line-height: 1.6; min-height: 100vh;
+}
+.container { max-width: 800px; margin: 0 auto; padding: 20px 16px 40px; }
+
+/* 顶部 */
+.header {
+  background: linear-gradient(135deg, #10b981, #14b8a6);
+  color: white; padding: 24px 20px; border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(16,185,129,0.25); margin-bottom: 20px;
+}
+.header h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.header p { font-size: 13px; opacity: 0.9; }
+
+/* 模型选择标签 */
+.model-tabs {
+  display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto;
+  padding-bottom: 4px; -webkit-overflow-scrolling: touch;
+}
+.model-tab {
+  flex-shrink: 0; padding: 10px 16px; border-radius: 10px;
+  background: white; border: 2px solid #e5e7eb; font-size: 13px;
+  font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.model-tab.active {
+  border-color: #10b981; background: linear-gradient(135deg, #ecfdf5, #f0fdfa);
+  color: #047857; box-shadow: 0 2px 10px rgba(16,185,129,0.15);
+}
+
+/* 教程卡片 */
+.tutorial-card {
+  background: white; border-radius: 16px; padding: 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 16px;
+  display: none;
+}
+.tutorial-card.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.model-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+  padding-bottom: 14px; border-bottom: 1px solid #f3f4f6;
+}
+.model-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 800; color: white;
+}
+.model-info h2 { font-size: 18px; font-weight: 800; }
+.model-info .price { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+/* 步骤 */
+.step { margin-bottom: 18px; }
+.step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: linear-gradient(135deg, #10b981, #14b8a6);
+  color: white; font-size: 12px; font-weight: 700; margin-right: 8px;
+}
+.step-title { font-size: 15px; font-weight: 700; color: #1f2937; margin-bottom: 8px; }
+.step-content { font-size: 13px; color: #4b5563; padding-left: 32px; }
+.step-content p { margin-bottom: 6px; }
+
+/* 链接按钮 */
+.link-btn {
+  display: inline-block; padding: 8px 16px; border-radius: 8px;
+  background: linear-gradient(135deg, #10b981, #14b8a6); color: white;
+  font-size: 12px; font-weight: 600; text-decoration: none; margin: 4px 0;
+}
+.link-btn:hover { opacity: 0.9; }
+
+/* 提示框 */
+.tip-box {
+  background: #f0fdf4; border-left: 3px solid #10b981;
+  padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 10px 0;
+  font-size: 12px; color: #065f46;
+}
+.warn-box {
+  background: #fffbeb; border-left: 3px solid #f59e0b;
+  padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 10px 0;
+  font-size: 12px; color: #92400e;
+}
+.error-box {
+  background: #fef2f2; border-left: 3px solid #ef4444;
+  padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 10px 0;
+  font-size: 12px; color: #991b1b;
+}
+
+/* 配置示例 */
+.config-example {
+  background: #1f2937; color: #e5e7eb; padding: 12px 14px;
+  border-radius: 8px; font-size: 12px; font-family: 'Courier New', monospace;
+  margin: 8px 0; overflow-x: auto; white-space: pre-wrap; word-break: break-all;
+}
+.config-example .label { color: #34d399; font-weight: 600; }
+
+/* 常见问题 */
+.faq-section { margin-top: 24px; }
+.faq-section h2 { font-size: 18px; font-weight: 800; margin-bottom: 14px; color: #1f2937; }
+.faq-item {
+  background: white; border-radius: 12px; padding: 14px 16px;
+  margin-bottom: 10px; box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+}
+.faq-q { font-size: 14px; font-weight: 700; color: #1f2937; margin-bottom: 6px; }
+.faq-a { font-size: 13px; color: #6b7280; }
+
+/* 底部 */
+.footer {
+  text-align: center; padding: 20px; font-size: 12px; color: #9ca3af;
+  margin-top: 30px;
+}
+.footer a { color: #10b981; text-decoration: none; }
+
+/* 回到顶部 */
+.back-top {
+  position: fixed; bottom: 20px; right: 20px; width: 44px; height: 44px;
+  border-radius: 50%; background: linear-gradient(135deg, #10b981, #14b8a6);
+  color: white; display: flex; align-items: center; justify-content: center;
+  font-size: 20px; box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+  cursor: pointer; z-index: 100; border: none;
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- 顶部 -->
+<div class="header">
+  <h1>📖 API配置教程</h1>
+  <p>AI舞蹈模仿平台 · 5个模型一键配置 · 新手友好</p>
+</div>
+
+<!-- 模型选择标签 -->
+<div class="model-tabs">
+  <div class="model-tab active" onclick="switchModel('vidu')">Vidu</div>
+  <div class="model-tab" onclick="switchModel('kling')">可灵</div>
+  <div class="model-tab" onclick="switchModel('jimeng')">即梦</div>
+  <div class="model-tab" onclick="switchModel('agnes')">Agnes</div>
+  <div class="model-tab" onclick="switchModel('faq')">常见问题</div>
+</div>
+
+<!-- Vidu教程 -->
+<div class="tutorial-card active" id="tutorial-vidu">
+  <div class="model-header">
+    <div class="model-icon" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">V</div>
+    <div class="model-info">
+      <h2>Vidu API 配置教程</h2>
+      <div class="price">💰 约 ¥0.36/秒 · 动作同步 · 稳定可靠</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">1</span>注册Vidu账号</div>
+    <div class="step-content">
+      <p>访问Vidu开放平台，使用邮箱或Google账号注册。</p>
+      <a href="https://platform.vidu.com/" target="_blank" class="link-btn">🔗 前往Vidu开放平台</a>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">2</span>充值算力额度</div>
+    <div class="step-content">
+      <p>登录后，在账户中心充值API Credits（算力额度）。新用户通常有免费试用额度。</p>
+      <div class="tip-box">💡 建议先充值少量额度测试，确认效果后再按需充值。</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">3</span>创建API Key</div>
+    <div class="step-content">
+      <p>进入「API Keys」标签页，点击「Create API Key」创建新的密钥。</p>
+      <p>创建后立即复制保存（密钥只显示一次）。</p>
+      <div class="warn-box">⚠️ API Key是你的支付凭证，请勿泄露给他人！</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">4</span>配置到平台</div>
+    <div class="step-content">
+      <p>打开AI舞蹈模仿平台，选择「Vidu」模型。</p>
+      <p>在「Vidu接口密钥」输入框中粘贴你的API Key，点击保存。</p>
+      <div class="config-example"><span class="label">API Key格式：</span>
+sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">5</span>测试生成</div>
+    <div class="step-content">
+      <p>上传人物图 + 参考视频，点击「一键生成」测试。</p>
+      <p>如果报错「Invalid API Key」，请检查密钥是否复制完整、是否有多余空格。</p>
+    </div>
+  </div>
+</div>
+
+<!-- 可灵教程 -->
+<div class="tutorial-card" id="tutorial-kling">
+  <div class="model-header">
+    <div class="model-icon" style="background: linear-gradient(135deg, #f59e0b, #f97316);">可</div>
+    <div class="model-info">
+      <h2>可灵 API 配置教程</h2>
+      <div class="price">💰 2.6版 ¥0.5/秒 · 3.0版 ¥0.9/秒 · 动作控制</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">1</span>注册可灵账号</div>
+    <div class="step-content">
+      <p>访问可灵AI开放平台，使用手机号注册。</p>
+      <a href="https://app.klingai.com/" target="_blank" class="link-btn">🔗 前往可灵开放平台</a>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">2</span>开通API服务</div>
+    <div class="step-content">
+      <p>登录后，进入「开放平台」或「API管理」页面，开通API调用服务。</p>
+      <p>购买资源包或开通按量计费（必须有额度才能调用）。</p>
+      <div class="tip-box">💡 可灵API和网页端会员额度不通用，需要单独充值API额度。</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">3</span>创建API Key</div>
+    <div class="step-content">
+      <p>进入「API管理」→「新建API Key」。</p>
+      <p>创建后密钥仅显示一次，立即复制保存。</p>
+      <div class="warn-box">⚠️ 可灵使用AK/SK生成JWT Token鉴权，平台已自动处理，你只需填入API Key即可。</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">4</span>配置到平台</div>
+    <div class="step-content">
+      <p>打开平台，选择「可灵2.6」或「可灵3.0」模型。</p>
+      <p>在「可灵API密钥」输入框中粘贴API Key。</p>
+      <div class="config-example"><span class="label">API Key格式：</span>
+xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">5</span>测试生成</div>
+    <div class="step-content">
+      <p>上传素材，点击「一键生成」。</p>
+      <p>可灵生成时间较长（通常1-3分钟），请耐心等待。</p>
+    </div>
+  </div>
+</div>
+
+<!-- 即梦教程 -->
+<div class="tutorial-card" id="tutorial-jimeng">
+  <div class="model-header">
+    <div class="model-icon" style="background: linear-gradient(135deg, #ef4444, #f97316);">即</div>
+    <div class="model-info">
+      <h2>即梦 API 配置教程</h2>
+      <div class="price">💰 约 ¥0.4/秒 · 字节跳动 · 国内访问快</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">1</span>注册火山引擎账号</div>
+    <div class="step-content">
+      <p>即梦AI是字节跳动旗下产品，API通过火山引擎提供。</p>
+      <p>访问火山引擎官网，使用手机号注册并完成实名认证。</p>
+      <a href="https://www.volcengine.com/" target="_blank" class="link-btn">🔗 前往火山引擎官网</a>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">2</span>开通即梦AI服务</div>
+    <div class="step-content">
+      <p>登录后，搜索「即梦AI」或「视觉智能」，进入即梦AI控制台。</p>
+      <p>开通「视频生成」相关能力，充值账户余额。</p>
+      <div class="tip-box">💡 火山引擎支持免费试用，新用户可领取免费额度。</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">3</span>获取AK/SK密钥</div>
+    <div class="step-content">
+      <p>点击右上角头像 → 「API访问密钥」→ 「新建密钥」。</p>
+      <p>获取 <strong>AccessKey ID（AK）</strong> 和 <strong>AccessKey Secret（SK）</strong>。</p>
+      <div class="warn-box">⚠️ SK只显示一次，务必立即保存！AK/SK是你的支付凭证，请勿泄露。</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">4</span>配置到平台</div>
+    <div class="step-content">
+      <p>打开平台，选择「即梦2.0」模型。</p>
+      <p>分别在「即梦AK」和「即梦SK」输入框中填入对应密钥。</p>
+      <div class="config-example"><span class="label">AK格式：</span>
+AKLTxxxxxxxxxxxxxxxxxxxxxxxx
+<span class="label">SK格式：</span>
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx=</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">5</span>测试生成</div>
+    <div class="step-content">
+      <p>上传素材，点击「一键生成」。</p>
+      <p>即梦使用HMAC-SHA256签名鉴权，平台已自动处理签名逻辑。</p>
+    </div>
+  </div>
+</div>
+
+<!-- Agnes教程 -->
+<div class="tutorial-card" id="tutorial-agnes">
+  <div class="model-header">
+    <div class="model-icon" style="background: linear-gradient(135deg, #06b6d4, #3b82f6);">A</div>
+    <div class="model-info">
+      <h2>Agnes API 配置教程</h2>
+      <div class="price">💰 约 ¥0.36/秒 · 支持分辨率选择 · 视频参考生成</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">1</span>注册Agnes账号</div>
+    <div class="step-content">
+      <p>访问Agnes AI平台，使用邮箱注册。</p>
+      <a href="https://platform.agnes-ai.com/" target="_blank" class="link-btn">🔗 前往Agnes平台</a>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">2</span>充值额度</div>
+    <div class="step-content">
+      <p>登录后，在账户中心充值API调用额度。</p>
+      <div class="tip-box">💡 Agnes支持480P/720P/1080P分辨率选择，分辨率越高费用越高。</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">3</span>获取API Key</div>
+    <div class="step-content">
+      <p>进入「API设置」或「开发者」页面，创建API Key。</p>
+      <p>复制保存你的API Key。</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">4</span>配置到平台</div>
+    <div class="step-content">
+      <p>打开平台，选择「Agnes 2.5」模型。</p>
+      <p>在「Agnes API Key」输入框中粘贴密钥。</p>
+      <p>选择输出分辨率（480P/720P/1080P）。</p>
+      <div class="config-example"><span class="label">API Key格式：</span>
+sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">5</span>测试生成</div>
+    <div class="step-content">
+      <p>上传素材，点击「一键生成」。</p>
+      <div class="error-box">❌ 常见错误「input audio or video is invalid or unsupported」：通常是视频链接无法访问，建议使用视频URL方式（粘贴直链），或切换其他模型。</div>
+    </div>
+  </div>
+</div>
+
+<!-- 常见问题 -->
+<div class="tutorial-card" id="tutorial-faq">
+  <div class="model-header">
+    <div class="model-icon" style="background: linear-gradient(135deg, #6b7280, #9ca3af);">?</div>
+    <div class="model-info">
+      <h2>常见问题 FAQ</h2>
+      <div class="price">配置失败？生成报错？看这里！</div>
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Q：API Key配置后还是不能用？</div>
+    <div class="faq-a">A：请检查：①密钥是否复制完整（没有多余空格）；②账户是否有余额/额度；③是否开通了对应模型的API服务；④网络是否正常。</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Q：哪个模型最便宜？</div>
+    <div class="faq-a">A：Vidu和Agnes都是约¥0.36/秒，是目前最便宜的。即梦¥0.4/秒，可灵2.6 ¥0.5/秒，可灵3.0 ¥0.9/秒。</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Q：生成10秒视频大概多少钱？</div>
+    <div class="faq-a">A：按单价计算：Vidu/Agnes约¥3.6，即梦约¥4，可灵2.6约¥5，可灵3.0约¥9。实际费用以模型官方计费为准。</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Q：上传视频失败怎么办？</div>
+    <div class="faq-a">A：建议：①改用「视频URL」方式，直接粘贴视频直链（最稳定）；②压缩视频到20MB以内；③切换WiFi/流量重试；④用电脑端操作。</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Q：视频URL支持哪些链接？</div>
+    <div class="faq-a">A：支持以http://或https://开头的视频直链（.mp4/.mov等）。抖音/快手/B站等平台链接需要先解析成直链，部分平台可能因跨域限制无法解析。</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Q：生成很慢/排队很久？</div>
+    <div class="faq-a">A：AI视频生成通常需要1-5分钟，高峰期可能排队更久。建议：①选择480P分辨率（生成最快）；②避开高峰期；③切换其他模型试试。</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Q：生成的视频怎么保存？</div>
+    <div class="faq-a">A：手机端：长按视频 → 保存到相册。电脑端：右键视频 → 视频另存为。也可以点击「下载视频」按钮直接下载。</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Q：API Key会泄露吗？安全吗？</div>
+    <div class="faq-a">A：API Key只保存在你自己的浏览器本地（localStorage），不会上传到任何服务器。清除浏览器数据会丢失配置，需要重新填写。请勿在公共设备上配置。</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Q：可以同时配置多个模型吗？</div>
+    <div class="faq-a">A：可以！每个模型的API密钥独立保存，切换模型时自动使用对应密钥。建议至少配置2个模型，一个失败时可以切换另一个。</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Q：新用户有免费额度吗？</div>
+    <div class="faq-a">A：大部分平台新用户都有免费试用额度：Vidu、可灵、即梦（火山引擎）、Agnes都有新用户免费额度，可以先免费测试效果再决定充值。</div>
+  </div>
+</div>
+
+<!-- 底部 -->
+<div class="footer">
+  <p>AI舞蹈模仿平台 · API配置教程</p>
+  <p style="margin-top:6px;">如有问题请联系卖家 · 教程仅供参考</p>
+  <p style="margin-top:10px;"><a href="https://aidance2026.github.io/ai-dance/" target="_blank">返回平台首页</a></p>
+</div>
+
+</div>
+
+<!-- 回到顶部 -->
+<button class="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+function switchModel(model) {
+  // 切换标签
+  document.querySelectorAll('.model-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  // 切换内容
+  document.querySelectorAll('.tutorial-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('tutorial-' + model).classList.add('active');
+  // 滚动到顶部
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+</script>
+</body>
+</html>
