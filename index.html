@@ -1267,6 +1267,7 @@ function handleVideo(e) {
   video.addEventListener('loadeddata', function() {
     try { video.currentTime = 0.1; } catch(e) {}
   });
+  showToast('正在检测视频时长...', 'info');
   detectDuration(url);
 }
 function handleVideoUrl(e) {
@@ -1287,6 +1288,8 @@ function handleVideoUrl(e) {
   video.addEventListener('loadeddata', function() {
     try { video.currentTime = 0.1; } catch(e) {}
   });
+  // 提示正在检测时长
+  showToast('正在检测视频时长...', 'info');
   detectDuration(url);
 }
 
@@ -1315,10 +1318,25 @@ function removeVideo() {
 // ============ 时长检测 ============
 function detectDuration(src) {
   const v = document.createElement('video');
-  v.preload = 'metadata'; v.crossOrigin = 'anonymous';
+  v.preload = 'metadata';
+  v.crossOrigin = 'anonymous';
+  let detected = false;
+  let timeoutTimer = null;
+
+  // 超时处理（10秒）
+  timeoutTimer = setTimeout(() => {
+    if (!detected) {
+      if (state.videoInputMode === 'url') {
+        showToast('视频时长检测超时，可手动调节时长', 'error');
+      }
+    }
+  }, 10000);
+
   v.onloadedmetadata = function() {
     const d = Math.round(v.duration);
     if (d > 0 && !isNaN(d)) {
+      detected = true;
+      clearTimeout(timeoutTimer);
       state.videoDuration = d;
       const cfg = MODELS[state.model];
       const max = state.model === 'vidu' ? cfg.maxDuration : (state.klingOrient === 'image' ? 10 : 30);
@@ -1327,10 +1345,24 @@ function detectDuration(src) {
       document.getElementById('durationSlider').value = auto;
       document.getElementById('durationValue').textContent = auto;
       updateCost();
-      showToast(`检测到视频${d}秒，生成时长设为${auto}秒`, 'success');
+      showToast(`检测到视频${d}秒，生成时长自动设为${auto}秒`, 'success');
     }
   };
-  v.onerror = function() { if (state.videoInputMode === 'upload') showToast('时长检测失败，可手动调节', 'error'); };
+  v.onerror = function() {
+    clearTimeout(timeoutTimer);
+    // URL方式跨域失败时，尝试不带crossOrigin
+    if (state.videoInputMode === 'url' && v.crossOrigin === 'anonymous') {
+      v.crossOrigin = null;
+      v.src = src;
+      v.load();
+      return;
+    }
+    if (state.videoInputMode === 'upload') {
+      showToast('时长检测失败，可手动调节', 'error');
+    } else {
+      showToast('视频时长检测失败（可能跨域限制），请手动调节时长', 'error');
+    }
+  };
   v.src = src;
 }
 function updateDuration(val) {
