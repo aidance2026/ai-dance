@@ -469,11 +469,6 @@ body {
       <div class="model-desc">动作同步</div><div class="model-price">¥0.36/秒</div>
       <div class="model-badge">便宜</div>
     </div>
-    <div class="model-card" data-model="jimeng" onclick="selectModel('jimeng')">
-      <div class="model-icon">🎭</div><div class="model-name">即梦 2.0</div>
-      <div class="model-desc">动作模仿</div><div class="model-price">¥0.4/秒</div>
-      <div class="model-badge">国产</div>
-    </div>
     <div class="model-card" data-model="kling26" onclick="selectModel('kling26')">
       <div class="model-icon">🔥</div><div class="model-name">可灵 2.6</div>
       <div class="model-desc">动作控制</div><div class="model-price">¥0.5/秒</div>
@@ -599,13 +594,6 @@ body {
           <div class="api-row"><span class="api-label">附加提示词</span><input type="text" class="text-input" id="klingPrompt" placeholder="可选：描述画面风格"></div>
         </div>
       </div>
-      <div id="jimengApi" style="display:none;">
-        <div class="api-row"><span class="api-label">Access Key</span><input type="password" class="text-input" id="jimengAK" placeholder="火山引擎AK"></div>
-        <div class="api-row"><span class="api-label">Secret Key</span><input type="password" class="text-input" id="jimengSK" placeholder="火山引擎SK"></div>
-        <div class="api-row"><span class="api-label">代理地址</span><input type="text" class="text-input" id="jimengProxy" placeholder="留空使用公共代理（推荐），或填Cloudflare Worker地址"></div>
-        <div class="api-tip">💡 即梦API需通过代理调用，留空自动使用公共CORS代理（3个自动降级）；追求稳定可自行部署Cloudflare Worker</div>
-        <div class="api-hint">即梦2.0动作模仿，需在火山引擎开通视觉智能服务。<a href="https://console.volcengine.com/iam/keymanage/" target="_blank">点此获取密钥 →</a></div>
-      </div>
       <div id="agnesApi" style="display:none;">
         <div class="api-row"><span class="api-label">API Key</span><input type="password" class="text-input" id="agnesKey" placeholder="Agnes API Key"></div>
         <div class="api-hint">Agnes视频参考生成，竖版720P。<a href="https://platform.agnes-ai.com/" target="_blank">没有密钥？点此注册获取 →</a></div>
@@ -672,7 +660,7 @@ body {
     </div>
   </div>
 
-  <div class="footer">Powered by Vidu · 可灵 · 即梦 · Agnes · 万相<br>AI舞蹈模仿平台 · 动作控制模型 · 仅供学习交流</div>
+  <div class="footer">Powered by Vidu · 可灵 · Agnes · 万相<br>AI舞蹈模仿平台 · 动作控制模型 · 仅供学习交流</div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -703,13 +691,6 @@ const MODELS = {
     hasSound: true,
     modelName: 'kling-v3',
   },
-  jimeng: {
-    name: '即梦 2.0 动作模仿',
-    rate: 0.4,
-    minDuration: 2,
-    maxDuration: 30,
-    hasSound: false,
-  },
   agnes: {
     name: 'Agnes 2.5 视频参考',
     rate: 0.36,
@@ -728,7 +709,6 @@ const MODELS = {
 
 const KLING_API = 'https://api-beijing.klingai.com/v1';
 const VIDU_API = 'https://api.vidu.com/ent/v2';
-const JIMENG_API = 'https://visual.volcengineapi.com';
 const AGNES_API = 'https://apihub.agnes-ai.com/v1';
 const WAN_API = 'https://dashscope.aliyuncs.com/api/v1';
 
@@ -1089,27 +1069,17 @@ window.onload = function() {
   const sk = localStorage.getItem('kling_secret_key');
   if (sk) document.getElementById('klingSecretKey').value = sk;
   if (ak || sk) updateApiStatus();
-  const jak = localStorage.getItem('jimeng_ak');
-  if (jak) document.getElementById('jimengAK').value = jak;
-  const jsk = localStorage.getItem('jimeng_sk');
-  if (jsk) document.getElementById('jimengSK').value = jsk;
-  const jproxy = localStorage.getItem('jimeng_proxy');
-  if (jproxy) document.getElementById('jimengProxy').value = jproxy;
-  if (jak || jsk) updateApiStatus();
   const agnes = localStorage.getItem('agnes_key');
   if (agnes) { document.getElementById('agnesKey').value = agnes; updateApiStatus(); }
   const wan = localStorage.getItem('wan_key');
   if (wan) { document.getElementById('wanKey').value = wan; updateApiStatus(); }
 };
 
-['viduToken','klingApiKey','klingSecretKey','jimengAK','jimengSK','jimengProxy','agnesKey','wanKey'].forEach(id => {
+['viduToken','klingApiKey','klingSecretKey','agnesKey','wanKey'].forEach(id => {
   document.getElementById(id).addEventListener('change', function() {
     if (id === 'viduToken') localStorage.setItem('vidu_token', this.value);
     if (id === 'klingApiKey') localStorage.setItem('kling_api_key', this.value);
     if (id === 'klingSecretKey') localStorage.setItem('kling_secret_key', this.value);
-    if (id === 'jimengAK') localStorage.setItem('jimeng_ak', this.value);
-    if (id === 'jimengSK') localStorage.setItem('jimeng_sk', this.value);
-    if (id === 'jimengProxy') localStorage.setItem('jimeng_proxy', this.value);
     if (id === 'agnesKey') localStorage.setItem('agnes_key', this.value);
     if (id === 'wanKey') localStorage.setItem('wan_key', this.value);
     updateApiStatus();
@@ -1120,10 +1090,6 @@ function updateApiStatus() {
   const el = document.getElementById('apiStatus');
   if (state.model === 'vidu') {
     if (document.getElementById('viduToken').value.trim()) {
-      el.textContent = '已配置'; el.style.color = '#10b981';
-    } else { el.textContent = '未配置'; el.style.color = '#666'; }
-  } else if (state.model === 'jimeng') {
-    if (document.getElementById('jimengAK').value.trim() && document.getElementById('jimengSK').value.trim()) {
       el.textContent = '已配置'; el.style.color = '#10b981';
     } else { el.textContent = '未配置'; el.style.color = '#666'; }
   } else if (state.model === 'agnes') {
@@ -1167,7 +1133,6 @@ function selectModel(model) {
   });
   document.getElementById('viduApi').style.display = model === 'vidu' ? 'block' : 'none';
   document.getElementById('klingApi').style.display = (model === 'kling26' || model === 'kling3') ? 'block' : 'none';
-  document.getElementById('jimengApi').style.display = model === 'jimeng' ? 'block' : 'none';
   document.getElementById('agnesApi').style.display = model === 'agnes' ? 'block' : 'none';
   document.getElementById('wanApi').style.display = model === 'wan' ? 'block' : 'none';
   document.querySelectorAll('.kling-only').forEach(el => {
@@ -1726,8 +1691,6 @@ async function generate() {
   try {
     if (state.model === 'vidu') {
       await generateVidu(videoUrl);
-    } else if (state.model === 'jimeng') {
-      await generateJimeng(videoUrl);
     } else if (state.model === 'agnes') {
       await generateAgnes(videoUrl);
     } else if (state.model === 'wan') {
@@ -1737,7 +1700,7 @@ async function generate() {
     }
   } catch (err) {
     console.error(err);
-    const modelNames = { vidu: 'Vidu', kling: '可灵', jimeng: '即梦', agnes: 'Agnes', wan: '万相' };
+    const modelNames = { vidu: 'Vidu', kling: '可灵', agnes: 'Agnes', wan: '万相' };
     const modelName = modelNames[state.model] || state.model;
     let errorMsg = err.message || '生成失败';
     // 如果是网络错误，添加针对性建议
@@ -1910,216 +1873,6 @@ function pollKling(token, taskId) {
           updateProgress(p, `${statusText}（已等待${Math.floor(elapsed)}秒）`);
         }
       }
-      if (elapsed >= 300) { clearInterval(state.pollTimer); throw new Error('生成超时，请重试'); }
-    } catch (err) {
-      clearInterval(state.pollTimer);
-      showToast(err.message || '查询失败', 'error');
-      resetBtn();
-    }
-  }, 2000);
-}
-
-// ============ 火山引擎签名算法 ============
-async function hmacSha256(key, msg) {
-  const cryptoKey = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const sig = await crypto.subtle.sign('HMAC', cryptoKey, new TextEncoder().encode(msg));
-  return new Uint8Array(sig);
-}
-async function sha256Hex(msg) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-function bytesToHex(bytes) {
-  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-async function volcSign(ak, sk, method, queryString, body) {
-  const region = 'cn-north-1';
-  const service = 'cv';
-  const now = new Date();
-  const dateStamp = now.toISOString().slice(0, 10).replace(/-/g, '');
-  const amzDate = dateStamp + 'T' + now.toISOString().slice(11, 19) + 'Z';
-  
-  const payloadHash = await sha256Hex(body);
-  const canonicalHeaders = 'content-type:application/json\n' + 'host:visual.volcengineapi.com\n' + 'x-content-sha256:' + payloadHash + '\n' + 'x-date:' + amzDate + '\n';
-  const signedHeaders = 'content-type;host;x-content-sha256;x-date';
-  
-  const canonicalRequest = method + '\n' + '/' + '\n' + queryString + '\n' + canonicalHeaders + '\n' + signedHeaders + '\n' + payloadHash;
-  const stringToSign = 'HMAC-SHA256' + '\n' + amzDate + '\n' + dateStamp + '/' + region + '/' + service + '/request' + '\n' + await sha256Hex(canonicalRequest);
-  
-  const kDate = await hmacSha256(new TextEncoder().encode(sk), dateStamp);
-  const kRegion = await hmacSha256(kDate, region);
-  const kService = await hmacSha256(kRegion, service);
-  const kSigning = await hmacSha256(kService, 'request');
-  const signature = bytesToHex(await hmacSha256(kSigning, stringToSign));
-  
-  const authorization = 'HMAC-SHA256 Credential=' + ak + '/' + dateStamp + '/' + region + '/' + service + '/request, SignedHeaders=' + signedHeaders + ', Signature=' + signature;
-  
-  return {
-    'Authorization': authorization,
-    'Content-Type': 'application/json',
-    'X-Date': amzDate,
-    'X-Content-Sha256': payloadHash
-  };
-}
-
-// ============ 即梦生成 ============
-async function generateJimeng(videoUrl) {
-  const ak = document.getElementById('jimengAK').value.trim();
-  const sk = document.getElementById('jimengSK').value.trim();
-  const proxy = document.getElementById('jimengProxy').value.trim();
-  if (!ak || !sk) throw new Error('请先配置即梦Access Key和Secret Key');
-
-  // 公共CORS代理列表（用户未配置自定义代理时自动使用）
-  // 国内可用代理优先：cors-anywhere.com、lite.corsfix.com
-  const PUBLIC_PROXIES = [
-    'https://cors-anywhere.com/',
-    'https://lite.corsfix.com/',
-    'https://corsproxy.io/?url=',
-    'https://api.allorigins.win/raw?url=',
-    'https://thingproxy.freeboard.io/fetch/'
-  ];
-  let currentProxyIndex = 0;
-
-  // 代理URL构建函数
-  function buildProxyUrl(targetUrl) {
-    if (proxy) {
-      // 用户自定义代理（Cloudflare Worker）
-      const proxyBase = proxy.replace(/\/$/, '');
-      return proxyBase + '/?url=' + encodeURIComponent(targetUrl);
-    }
-    // 使用公共CORS代理
-    const publicProxy = PUBLIC_PROXIES[currentProxyIndex % PUBLIC_PROXIES.length];
-    // cors-anywhere、corsfix、thingproxy不需要encodeURIComponent
-    if (publicProxy.includes('cors-anywhere') || publicProxy.includes('corsfix') || publicProxy.includes('thingproxy')) {
-      return publicProxy + targetUrl;
-    }
-    return publicProxy + encodeURIComponent(targetUrl);
-  }
-
-  // 切换到下一个代理
-  function nextProxy() {
-    currentProxyIndex++;
-    if (currentProxyIndex < PUBLIC_PROXIES.length) {
-      updateProgress(-1, `代理${currentProxyIndex}失败，尝试代理${currentProxyIndex + 1}...`);
-      return true;
-    }
-    return false;
-  }
-
-  // 上传视频到catbox
-  if (state.videoInputMode === 'upload' && !videoUrl) {
-    updateProgress(5, '正在上传参考视频...');
-    videoUrl = await uploadToCatbox(state.videoFile);
-  }
-
-  // 图片转base64
-  let imageBase64 = state.imageBase64;
-  if (imageBase64.startsWith('data:')) {
-    imageBase64 = imageBase64.split(',')[1];
-  }
-
-  updateProgress(10, '正在提交任务...');
-
-  // 提交任务
-  const submitBody = JSON.stringify({
-    req_key: 'jimeng_dreamactor_m20_gen_video',
-    binary_data_base64: [imageBase64],
-    video_url: videoUrl,
-    cut_result_first_second_switch: true
-  });
-
-  const submitQuery = 'Action=CVSync2AsyncSubmitTask&Version=2022-08-31';
-  const submitHeaders = await volcSign(ak, sk, 'POST', submitQuery, submitBody);
-  // cors-anywhere代理需要此请求头
-  submitHeaders['X-Requested-With'] = 'XMLHttpRequest';
-
-  // 提交任务（带代理重试）
-  let submitData = null;
-  const maxRetries = proxy ? 1 : 5; // 自定义代理只试1次，公共代理试5次
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const submitUrl = buildProxyUrl(JIMENG_API + '?' + submitQuery);
-      const submitRes = await fetchWithTimeout(submitUrl, {
-        method: 'POST',
-        headers: submitHeaders,
-        body: submitBody
-      }, 20000);
-      submitData = await submitRes.json();
-      break; // 成功，跳出循环
-    } catch (e) {
-      if (attempt < maxRetries - 1 && !proxy) {
-        nextProxy();
-        continue; // 尝试下一个代理
-      }
-      throw new Error('网络连接失败（所有代理均不可用），请检查网络或配置自定义代理');
-    }
-  }
-
-  if (submitData.code !== 10000 || !submitData.data || !submitData.data.task_id) {
-    throw new Error(submitData.message || '任务提交失败');
-  }
-
-  const taskId = submitData.data.task_id;
-  state.taskId = taskId;
-  updateProgress(15, '任务已提交，等待生成...');
-
-  // 轮询查询
-  const startTime = Date.now();
-  state.pollTimer = setInterval(async () => {
-    try {
-      const elapsed = (Date.now() - startTime) / 1000;
-      const queryBody = JSON.stringify({
-        req_key: 'jimeng_dreamactor_m20_gen_video',
-        task_id: taskId
-      });
-      const queryQuery = 'Action=CVSync2AsyncGetResult&Version=2022-08-31';
-      const queryHeaders = await volcSign(ak, sk, 'POST', queryQuery, queryBody);
-      // cors-anywhere代理需要此请求头
-      queryHeaders['X-Requested-With'] = 'XMLHttpRequest';
-
-      // 查询任务（带代理重试）
-      let data = null;
-      const queryMaxRetries = proxy ? 1 : 3;
-      for (let qAttempt = 0; qAttempt < queryMaxRetries; qAttempt++) {
-        try {
-          const queryUrl = buildProxyUrl(JIMENG_API + '?' + queryQuery);
-          const res = await fetchWithTimeout(queryUrl, {
-            method: 'POST',
-            headers: queryHeaders,
-            body: queryBody
-          }, 15000);
-          data = await res.json();
-          break;
-        } catch (e) {
-          if (qAttempt < queryMaxRetries - 1 && !proxy) {
-            nextProxy();
-            continue;
-          }
-          // 查询失败不立即报错，继续下一轮查询
-          return;
-        }
-      }
-
-      if (data.code !== 10000) {
-        clearInterval(state.pollTimer);
-        throw new Error(data.message || '查询失败');
-      }
-
-      const status = data.data.status;
-      if (status === 'done') {
-        clearInterval(state.pollTimer);
-        if (!data.data.video_url) throw new Error('未获取到视频地址');
-        state.resultVideoUrl = data.data.video_url;
-        showResult(data.data.video_url, `${MODELS[state.model].name} 生成完成（无声，可混合原声），720P 25fps`);
-      } else if (status === 'not_found' || status === 'expired') {
-        clearInterval(state.pollTimer);
-        throw new Error('任务不存在或已过期');
-      } else {
-        const p = Math.min(20 + (elapsed / 120) * 75, 95);
-        const statusText = status === 'generating' ? 'AI绘制视频帧中...' : (status === 'in_queue' ? '任务排队中...' : '处理中...');
-        updateProgress(p, `${statusText}（已等待${Math.floor(elapsed)}秒）`);
-      }
-
       if (elapsed >= 300) { clearInterval(state.pollTimer); throw new Error('生成超时，请重试'); }
     } catch (err) {
       clearInterval(state.pollTimer);
