@@ -98,6 +98,37 @@ body {
 }
 .model-badge.new { background: var(--purple); }
 .model-badge.soon { background: var(--muted); }
+.template-scroll {
+  display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.template-scroll::-webkit-scrollbar { display: none; }
+.template-card {
+  flex-shrink: 0; width: 100px; background: var(--card); border: 2px solid var(--border);
+  border-radius: 14px; padding: 12px 8px; cursor: pointer; transition: all 0.25s;
+  text-align: center; position: relative;
+}
+.template-card.active {
+  border-color: var(--accent); background: linear-gradient(135deg, #f0fdfa, #ecfeff);
+  box-shadow: 0 4px 16px rgba(20,184,166,0.2);
+}
+.template-card .tpl-icon { font-size: 24px; margin-bottom: 5px; }
+.template-card .tpl-name { font-size: 12px; font-weight: 700; color: var(--text); }
+.template-card .tpl-desc { font-size: 9px; color: var(--muted); margin-top: 2px; line-height: 1.3; }
+.template-card.active .tpl-name { color: var(--accent); }
+.template-card .tpl-check {
+  position: absolute; top: 4px; right: 4px; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--accent); color: white; font-size: 10px;
+  display: none; align-items: center; justify-content: center;
+}
+.template-card.active .tpl-check { display: flex; }
+.template-info-bar {
+  background: linear-gradient(135deg, #f0fdfa, #ecfeff); border-radius: 10px;
+  padding: 10px 14px; font-size: 11px; color: #0f766e; line-height: 1.5;
+  margin-bottom: 14px; border: 1px solid rgba(20,184,166,0.2);
+  display: none;
+}
+.template-info-bar.show { display: block; }
 .create-card {
   background: var(--card); border-radius: 20px; padding: 18px; margin-bottom: 14px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.04); border: 1px solid rgba(16,185,129,0.08);
@@ -422,6 +453,51 @@ body {
     </div>
   </div>
 
+  <div class="section-title"><span class="icon">🎭</span> 风格模板 <span style="font-size:11px;color:var(--muted);font-weight:400;">一键选择舞蹈风格</span></div>
+  <div class="template-scroll" id="templateScroll">
+    <div class="template-card" data-tpl="hiphop" onclick="selectTemplate('hiphop')">
+      <div class="tpl-check">✓</div>
+      <div class="tpl-icon">🔥</div><div class="tpl-name">街舞</div>
+      <div class="tpl-desc">动感节奏·力量感</div>
+    </div>
+    <div class="template-card" data-tpl="kpop" onclick="selectTemplate('kpop')">
+      <div class="tpl-check">✓</div>
+      <div class="tpl-icon">💫</div><div class="tpl-name">韩舞</div>
+      <div class="tpl-desc">偶像风·整齐划一</div>
+    </div>
+    <div class="template-card" data-tpl="folk" onclick="selectTemplate('folk')">
+      <div class="tpl-check">✓</div>
+      <div class="tpl-icon">🏮</div><div class="tpl-name">民族舞</div>
+      <div class="tpl-desc">古典韵味·柔美</div>
+    </div>
+    <div class="template-card" data-tpl="modern" onclick="selectTemplate('modern')">
+      <div class="tpl-check">✓</div>
+      <div class="tpl-icon">🌊</div><div class="tpl-name">现代舞</div>
+      <div class="tpl-desc">自由表达·情感</div>
+    </div>
+    <div class="template-card" data-tpl="ancient" onclick="selectTemplate('ancient')">
+      <div class="tpl-check">✓</div>
+      <div class="tpl-icon">🎐</div><div class="tpl-name">古风舞</div>
+      <div class="tpl-desc">汉服古韵·飘逸</div>
+    </div>
+    <div class="template-card" data-tpl="anime" onclick="selectTemplate('anime')">
+      <div class="tpl-check">✓</div>
+      <div class="tpl-icon">✨</div><div class="tpl-name">二次元</div>
+      <div class="tpl-desc">动漫风·可爱萌</div>
+    </div>
+    <div class="template-card" data-tpl="sexy" onclick="selectTemplate('sexy')">
+      <div class="tpl-check">✓</div>
+      <div class="tpl-icon">🌶️</div><div class="tpl-name">酷飒风</div>
+      <div class="tpl-desc">性感帅气·气场</div>
+    </div>
+    <div class="template-card" data-tpl="cute" onclick="selectTemplate('cute')">
+      <div class="tpl-check">✓</div>
+      <div class="tpl-icon">🍭</div><div class="tpl-name">可爱风</div>
+      <div class="tpl-desc">甜美活泼·元气</div>
+    </div>
+  </div>
+  <div class="template-info-bar" id="templateInfoBar"></div>
+
   <div class="create-card">
     <div class="card-title"><span class="icon">📤</span> 上传素材</div>
     <div class="upload-row">
@@ -585,6 +661,7 @@ let state = {
   pollTimer: null,
   resultVideoUrl: null,
   ffmpegLoaded: false,
+  template: null,
 };
 
 // ============ 卖家管理配置 ============
@@ -834,6 +911,38 @@ function selectModel(model) {
   document.getElementById('mixAudioBtn').style.display = cfg.hasSound ? 'none' : 'block';
   updateCost();
   updateApiStatus();
+}
+
+// ============ 风格模板 ============
+const TEMPLATES = {
+  hiphop: { name: '街舞', icon: '🔥', prompt: 'hiphop dance style, street dance, dynamic movements, strong rhythm, urban style, energetic, powerful choreography', desc: '动感节奏·力量感，适合快节奏音乐' },
+  kpop: { name: '韩舞', icon: '💫', prompt: 'kpop dance style, idol choreography, synchronized movements, polished performance, trendy fashion, clean and sharp dance moves', desc: '偶像风·整齐划一，适合韩流音乐' },
+  folk: { name: '民族舞', icon: '🏮', prompt: 'Chinese folk dance, classical Chinese dance style, graceful and elegant movements, traditional costume, flowing sleeves, cultural dance', desc: '古典韵味·柔美，适合古风音乐' },
+  modern: { name: '现代舞', icon: '🌊', prompt: 'modern dance style, contemporary dance, expressive movements, emotional performance, fluid and free choreography, artistic dance', desc: '自由表达·情感，适合抒情音乐' },
+  ancient: { name: '古风舞', icon: '🎐', prompt: 'ancient Chinese style dance, hanfu costume, traditional Chinese dance, elegant and graceful, flowing movements, classical oriental beauty', desc: '汉服古韵·飘逸，适合古风配乐' },
+  anime: { name: '二次元', icon: '✨', prompt: 'anime style dance, cute and energetic, otaku dance style, colorful and vibrant, kawaii movements, idol anime dance', desc: '动漫风·可爱萌，适合二次元音乐' },
+  sexy: { name: '酷飒风', icon: '🌶️', prompt: 'sexy and cool dance style, confident and powerful, charismatic performance, stylish and fierce, strong stage presence', desc: '性感帅气·气场，适合流行舞曲' },
+  cute: { name: '可爱风', icon: '🍭', prompt: 'cute and sweet dance style, adorable movements, cheerful and energetic, girly and lovely, sweet and innocent performance', desc: '甜美活泼·元气，适合甜美音乐' }
+};
+
+function selectTemplate(tplKey) {
+  const tpl = TEMPLATES[tplKey];
+  if (!tpl) return;
+  // 切换选中状态
+  document.querySelectorAll('.template-card').forEach(c => {
+    c.classList.toggle('active', c.dataset.tpl === tplKey);
+  });
+  state.template = tplKey;
+  // 自动填充提示词（可灵模型）
+  const promptInput = document.getElementById('klingPrompt');
+  if (promptInput) {
+    promptInput.value = tpl.prompt;
+  }
+  // 显示模板信息
+  const infoBar = document.getElementById('templateInfoBar');
+  infoBar.innerHTML = `🎭 已选择「${tpl.icon} ${tpl.name}」模板 — ${tpl.desc}。提示词已自动填充，可在API配置中查看修改。`;
+  infoBar.classList.add('show');
+  showToast(`已选择${tpl.name}模板，提示词已自动填充`);
 }
 
 function selectMode(mode) {
