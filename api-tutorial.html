@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -136,7 +136,7 @@ body {
 <!-- 顶部 -->
 <div class="header">
   <h1>📖 API配置教程</h1>
-  <p>AI舞蹈模仿平台 · 5个模型一键配置 · 新手友好</p>
+  <p>AI舞蹈模仿平台 · 6个模型一键配置 · 新手友好</p>
 </div>
 
 <!-- 模型选择标签 -->
@@ -145,6 +145,7 @@ body {
   <div class="model-tab" onclick="switchModel('kling')">可灵</div>
   <div class="model-tab" onclick="switchModel('jimeng')">即梦</div>
   <div class="model-tab" onclick="switchModel('agnes')">Agnes</div>
+  <div class="model-tab" onclick="switchModel('wan')">万相</div>
   <div class="model-tab" onclick="switchModel('faq')">常见问题</div>
 </div>
 
@@ -365,6 +366,85 @@ sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</div>
     <div class="step-content">
       <p>上传素材，点击「一键生成」。</p>
       <div class="error-box">❌ 常见错误「input audio or video is invalid or unsupported」：通常是视频链接无法访问，建议使用视频URL方式（粘贴直链），或切换其他模型。</div>
+    </div>
+  </div>
+</div>
+
+<!-- 万相教程 -->
+<div class="tutorial-card" id="tutorial-wan">
+  <div class="model-header">
+    <div class="model-icon" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);">🌀</div>
+    <div class="model-info">
+      <h2>万相 wan2.2-animate-move 配置教程</h2>
+      <div class="price">💰 约 ¥0.5/秒 · 阿里云出品 · 支持480P/720P/1080P · 无需代理</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">1</span>注册阿里云百炼账号</div>
+    <div class="step-content">
+      <p>访问阿里云百炼（Model Studio）控制台，使用阿里云账号登录。没有阿里云账号可先注册。</p>
+      <a href="https://bailian.console.aliyun.com/" target="_blank" class="link-btn">🔗 前往阿里云百炼控制台</a>
+      <div class="tip-box">💡 注意：旧版 dashscope.console.aliyun.com 已于2026年8月下线，请使用新的 bailian.console.aliyun.com。</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">2</span>开通模型服务</div>
+    <div class="step-content">
+      <p>登录后，在「模型广场」或「视频生成」分类中找到「万相-图生动作（wan2.2-animate-move）」。</p>
+      <p>点击「开通服务」或「立即体验」，按照提示完成开通（可能需要实名认证）。</p>
+      <div class="warn-box">⚠️ 新用户通常有免费试用额度，可先免费测试效果。</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">3</span>获取API Key</div>
+    <div class="step-content">
+      <p>在控制台左侧菜单找到「API Key管理」或点击右上角头像 →「API Key」。</p>
+      <p>点击「创建新的API Key」，输入名称后确认创建。</p>
+      <p>创建后立即复制保存（密钥只显示一次，格式为 sk- 开头）。</p>
+      <div class="config-example"><span class="label">API Key格式：</span>
+sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</div>
+      <div class="error-box">❌ API Key是你的支付凭证，请勿泄露给他人！丢失后请立即删除并重新创建。</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">4</span>充值算力额度</div>
+    <div class="step-content">
+      <p>在「费用中心」或「资源包管理」中充值或购买算力资源包。</p>
+      <p>万相图生动作按生成视频秒数计费，标准模式（wan-std）约¥0.5/秒。</p>
+      <div class="tip-box">💡 调用失败不产生费用，也不消耗免费额度。建议先充值少量测试。</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">5</span>配置到平台</div>
+    <div class="step-content">
+      <p>打开AI舞蹈模仿平台，选择「🌀 万相 2.2」模型。</p>
+      <p>在「DashScope API Key」输入框中粘贴你的API Key（自动保存到本地）。</p>
+      <p>选择输出分辨率（480P/720P/1080P）和视频时长（2-15秒）。</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">6</span>测试生成</div>
+    <div class="step-content">
+      <p>上传人物图片 + 参考舞蹈视频（或粘贴视频URL直链），点击「一键生成」。</p>
+      <p>万相模型支持CORS跨域，<strong>不需要代理</strong>，国内网络可直接调用。</p>
+      <div class="tip-box">💡 生成视频URL有效期24小时，请及时下载保存到本地。</div>
+      <div class="error-box">❌ 常见错误「InvalidApiKey」：检查密钥是否复制完整、是否有多余空格、是否已开通万相模型服务。</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title"><span class="step-num">7</span>效果优化建议</div>
+    <div class="step-content">
+      <p>📌 人物图与参考视频人物身材比例尽量一致，输出效果更好。</p>
+      <p>📌 建议上传竖版人物图片，输出分辨率跟随人物图比例。</p>
+      <p>📌 使用高清、高帧率参考视频可提升生成画质。</p>
+      <p>📌 标准模式（wan-std）生成快、性价比高；专业模式（wan-pro）效果更好但更慢更贵。</p>
     </div>
   </div>
 </div>
