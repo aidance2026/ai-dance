@@ -136,14 +136,13 @@ body {
 <!-- 顶部 -->
 <div class="header">
   <h1>📖 API配置教程</h1>
-  <p>AI舞蹈模仿平台 · 6个模型一键配置 · 新手友好</p>
+  <p>AI舞蹈模仿平台 · 5个模型一键配置 · 新手友好</p>
 </div>
 
 <!-- 模型选择标签 -->
 <div class="model-tabs">
   <div class="model-tab active" onclick="switchModel('vidu')">Vidu</div>
   <div class="model-tab" onclick="switchModel('kling')">可灵</div>
-  <div class="model-tab" onclick="switchModel('jimeng')">即梦</div>
   <div class="model-tab" onclick="switchModel('agnes')">Agnes</div>
   <div class="model-tab" onclick="switchModel('wan')">万相</div>
   <div class="model-tab" onclick="switchModel('faq')">常见问题</div>
@@ -254,64 +253,6 @@ xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</div>
     <div class="step-content">
       <p>上传素材，点击「一键生成」。</p>
       <p>可灵生成时间较长（通常1-3分钟），请耐心等待。</p>
-    </div>
-  </div>
-</div>
-
-<!-- 即梦教程 -->
-<div class="tutorial-card" id="tutorial-jimeng">
-  <div class="model-header">
-    <div class="model-icon" style="background: linear-gradient(135deg, #ef4444, #f97316);">即</div>
-    <div class="model-info">
-      <h2>即梦 API 配置教程</h2>
-      <div class="price">💰 约 ¥0.4/秒 · 字节跳动 · 国内访问快</div>
-    </div>
-  </div>
-
-  <div class="step">
-    <div class="step-title"><span class="step-num">1</span>注册火山引擎账号</div>
-    <div class="step-content">
-      <p>即梦AI是字节跳动旗下产品，API通过火山引擎提供。</p>
-      <p>访问火山引擎官网，使用手机号注册并完成实名认证。</p>
-      <a href="https://www.volcengine.com/" target="_blank" class="link-btn">🔗 前往火山引擎官网</a>
-    </div>
-  </div>
-
-  <div class="step">
-    <div class="step-title"><span class="step-num">2</span>开通即梦AI服务</div>
-    <div class="step-content">
-      <p>登录后，搜索「即梦AI」或「视觉智能」，进入即梦AI控制台。</p>
-      <p>开通「视频生成」相关能力，充值账户余额。</p>
-      <div class="tip-box">💡 火山引擎支持免费试用，新用户可领取免费额度。</div>
-    </div>
-  </div>
-
-  <div class="step">
-    <div class="step-title"><span class="step-num">3</span>获取AK/SK密钥</div>
-    <div class="step-content">
-      <p>点击右上角头像 → 「API访问密钥」→ 「新建密钥」。</p>
-      <p>获取 <strong>AccessKey ID（AK）</strong> 和 <strong>AccessKey Secret（SK）</strong>。</p>
-      <div class="warn-box">⚠️ SK只显示一次，务必立即保存！AK/SK是你的支付凭证，请勿泄露。</div>
-    </div>
-  </div>
-
-  <div class="step">
-    <div class="step-title"><span class="step-num">4</span>配置到平台</div>
-    <div class="step-content">
-      <p>打开平台，选择「即梦2.0」模型。</p>
-      <p>分别在「即梦AK」和「即梦SK」输入框中填入对应密钥。</p>
-      <div class="config-example"><span class="label">AK格式：</span>
-AKLTxxxxxxxxxxxxxxxxxxxxxxxx
-<span class="label">SK格式：</span>
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx=</div>
-    </div>
-  </div>
-
-  <div class="step">
-    <div class="step-title"><span class="step-num">5</span>测试生成</div>
-    <div class="step-content">
-      <p>上传素材，点击「一键生成」。</p>
-      <p>即梦使用HMAC-SHA256签名鉴权，平台已自动处理签名逻辑。</p>
     </div>
   </div>
 </div>
@@ -466,12 +407,12 @@ sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</div>
 
   <div class="faq-item">
     <div class="faq-q">Q：哪个模型最便宜？</div>
-    <div class="faq-a">A：Vidu和Agnes都是约¥0.36/秒，是目前最便宜的。即梦¥0.4/秒，可灵2.6 ¥0.5/秒，可灵3.0 ¥0.9/秒。</div>
+    <div class="faq-a">A：Vidu和Agnes都是约¥0.36/秒，是目前最便宜的。可灵2.6 ¥0.5/秒，万相¥0.5/秒，可灵3.0 ¥0.9/秒。</div>
   </div>
 
   <div class="faq-item">
     <div class="faq-q">Q：生成10秒视频大概多少钱？</div>
-    <div class="faq-a">A：按单价计算：Vidu/Agnes约¥3.6，即梦约¥4，可灵2.6约¥5，可灵3.0约¥9。实际费用以模型官方计费为准。</div>
+    <div class="faq-a">A：按单价计算：Vidu/Agnes约¥3.6，可灵2.6/万相约¥5，可灵3.0约¥9。实际费用以模型官方计费为准。</div>
   </div>
 
   <div class="faq-item">
@@ -506,7 +447,7 @@ sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</div>
 
   <div class="faq-item">
     <div class="faq-q">Q：新用户有免费额度吗？</div>
-    <div class="faq-a">A：大部分平台新用户都有免费试用额度：Vidu、可灵、即梦（火山引擎）、Agnes都有新用户免费额度，可以先免费测试效果再决定充值。</div>
+    <div class="faq-a">A：大部分平台新用户都有免费试用额度：Vidu、可灵、Agnes、万相（阿里云百炼）都有新用户免费额度，可以先免费测试效果再决定充值。</div>
   </div>
 </div>
 
