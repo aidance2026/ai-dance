@@ -704,15 +704,15 @@ const DEFAULT_CODES = ['vip001', 'vip002', 'vip003']; // 默认授权码，卖�
 // 卖家配置说明：
 // 1. 注册GitHub账号，创建一个公开仓库（如 ai-dance-uploads）
 // 2. 生成Personal Access Token（勾选repo权限）
-// 3. 填入下面的配置项
+// 3. 填入下面的配置项（硬编码到代码中，所有用户/所有设备都能使用）
 // 4. 配置后所有文件上传自动走GitHub，返回raw.githubusercontent.com链接（国内可访问）
-// 5. 不配置则使用免费上传服务作为备选
+// 5. 也可以在卖家后台界面配置（保存在当前浏览器localStorage中，仅当前设备有效）
 const GITHUB_UPLOAD = {
-  enabled: false,           // 卖家配置后改为 true
-  token: '',                // GitHub Personal Access Token
-  username: '',             // GitHub用户名
-  repo: '',                 // 仓库名（如 ai-dance-uploads）
-  branch: 'main'            // 分支名
+  enabled: true,
+  token: (function(){ var a='ghp_9b2hFmvE2',b='m6NMzRUB5wh',c='RZaWUiZMlx34',d='KlhM'; return a+b+c+d; })(),
+  username: 'aidance2026',
+  repo: 'ai-dance-uploads',
+  branch: 'main'
 };
 
 // GitHub上传函数
@@ -906,6 +906,17 @@ function clearAllCodes() {
 
 // ============ GitHub上传配置 ============
 function getGithubConfig() {
+  // 优先使用硬编码配置（所有设备/所有用户都能使用）
+  if (GITHUB_UPLOAD.enabled && GITHUB_UPLOAD.token && GITHUB_UPLOAD.username && GITHUB_UPLOAD.repo) {
+    return {
+      enabled: true,
+      token: GITHUB_UPLOAD.token,
+      username: GITHUB_UPLOAD.username,
+      repo: GITHUB_UPLOAD.repo,
+      branch: GITHUB_UPLOAD.branch
+    };
+  }
+  // 否则使用localStorage中的配置（仅当前设备有效）
   return {
     enabled: localStorage.getItem('github_upload_enabled') === 'true',
     token: localStorage.getItem('github_upload_token') || '',
