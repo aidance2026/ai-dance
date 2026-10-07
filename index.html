@@ -766,6 +766,12 @@ async function uploadToGithub(file) {
     return null; // 未配置，返回null让调用方使用备选方案
   }
   
+  // GitHub API通过API上传文件限制100MB，超过则使用备选方案
+  if (file.size > 100 * 1024 * 1024) {
+    console.warn('文件超过100MB，GitHub API不支持，使用备选上传服务');
+    return null;
+  }
+  
   // 生成文件名（时间戳+随机数+原扩展名）
   const ext = file.name.includes('.') ? file.name.split('.').pop() : 'mp4';
   const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 8)}.${ext}`;
@@ -2239,21 +2245,52 @@ async function mixAudio() {
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>加载中...';
   try {
     if (!state.ffmpegLoaded) {
-      showToast('正在加载音频处理组件（约20MB）...');
-      const s = document.createElement('script');
-      s.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/ffmpeg.min.js';
-      await new Promise((res, rej) => { s.onload = res; s.onerror = () => rej(new Error('组件加载失败')); document.head.appendChild(s); });
+      showToast('正在加载音频处理组件（约20MB，首次使用需下载）...');
+      // 多个CDN源，国内优先使用jsDelivr
+      const cdns = [
+        'https://fastly.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/ffmpeg.min.js',
+        'https://gcore.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/ffmpeg.min.js',
+        'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/ffmpeg.min.js'
+      ];
+      let loaded = false;
+      for (const cdnUrl of cdns) {
+        try {
+          const s = document.createElement('script');
+          s.src = cdnUrl;
+          await new Promise((res, rej) => {
+            s.onload = res;
+            s.onerror = () => rej(new Error('CDN加载失败'));
+            document.head.appendChild(s);
+          });
+          loaded = true;
+          break;
+        } catch(e) {
+          console.warn('CDN加载失败，尝试下一个:', cdnUrl);
+          continue;
+        }
+      }
+      if (!loaded) throw new Error('音频处理组件加载失败，请检查网络后重试');
       state.ffmpegLoaded = true;
     }
     const { createFFmpeg } = FFmpeg;
     const ffmpeg = createFFmpeg({ log: false });
     btn.innerHTML = '<span class="spinner"></span>处理中...';
     await ffmpeg.load();
-    const vRes = await fetch(state.resultVideoUrl);
+    // 下载生成的视频
+    let vRes;
+    try {
+      vRes = await fetch(state.resultVideoUrl);
+    } catch(e) {
+      throw new Error('视频下载失败（可能是跨域限制），请先下载视频到本地再混合');
+    }
     await ffmpeg.FS('writeFile', 'input.mp4', new Uint8Array(await vRes.arrayBuffer()));
     let refBuf;
-    if (state.videoFile) refBuf = await state.videoFile.arrayBuffer();
-    else { const r = await fetch(refSrc); refBuf = await r.arrayBuffer(); }
+    try {
+      if (state.videoFile) refBuf = await state.videoFile.arrayBuffer();
+      else { const r = await fetch(refSrc); refBuf = await r.arrayBuffer(); }
+    } catch(e) {
+      throw new Error('参考视频读取失败（可能是跨域限制），请使用本地上传的视频');
+    }
     await ffmpeg.FS('writeFile', 'ref.mp4', new Uint8Array(refBuf));
     await ffmpeg.run('-i','input.mp4','-i','ref.mp4','-c:v','copy','-c:a','aac','-map','0:v:0','-map','1:a:0','-shortest','-t',state.duration.toString(),'output.mp4');
     const data = ffmpeg.FS('readFile', 'output.mp4');
@@ -2266,7 +2303,7 @@ async function mixAudio() {
     showToast('带原声视频已下载！', 'success');
     btn.innerHTML = '🎵 混合原声'; btn.disabled = false;
   } catch (err) {
-    showToast('音频混合失败：' + (err.message || ''), 'error');
+    showToast('音频混合失败：' + (err.message || '未知错误'), 'error');
     btn.innerHTML = '🎵 混合原声'; btn.disabled = false;
   }
 }
