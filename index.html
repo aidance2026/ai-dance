@@ -1352,18 +1352,19 @@ function removeVideo() {
 function detectDuration(src) {
   const v = document.createElement('video');
   v.preload = 'metadata';
-  v.crossOrigin = 'anonymous';
+  // 注意：获取视频时长不需要crossOrigin，设置crossOrigin反而会导致跨域限制
+  // 只有用canvas绘制视频帧时才需要crossOrigin
   let detected = false;
   let timeoutTimer = null;
 
-  // 超时处理（10秒）
+  // 超时处理（15秒，给足加载时间）
   timeoutTimer = setTimeout(() => {
     if (!detected) {
       if (state.videoInputMode === 'url') {
         showToast('视频时长检测超时，可手动调节时长', 'error');
       }
     }
-  }, 10000);
+  }, 15000);
 
   v.onloadedmetadata = function() {
     const d = Math.round(v.duration);
@@ -1383,17 +1384,10 @@ function detectDuration(src) {
   };
   v.onerror = function() {
     clearTimeout(timeoutTimer);
-    // URL方式跨域失败时，尝试不带crossOrigin
-    if (state.videoInputMode === 'url' && v.crossOrigin === 'anonymous') {
-      v.crossOrigin = null;
-      v.src = src;
-      v.load();
-      return;
-    }
     if (state.videoInputMode === 'upload') {
       showToast('时长检测失败，可手动调节', 'error');
     } else {
-      showToast('视频时长检测失败（可能跨域限制），请手动调节时长', 'error');
+      showToast('视频时长检测失败，请手动调节时长（建议使用视频直链）', 'error');
     }
   };
   v.src = src;
