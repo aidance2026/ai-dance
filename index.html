@@ -375,6 +375,38 @@ body {
       </div>
       <button class="admin-btn-sm gray" onclick="exportCodes()">导出授权码</button>
       <button class="admin-btn-sm danger" onclick="clearAllCodes()" style="margin-left:8px;">清空全部</button>
+      
+      <div style="border-top:1px solid var(--border);margin:20px 0 16px;"></div>
+      
+      <div class="admin-section">
+        <div class="admin-label" style="color:var(--primary-dark);">📤 GitHub上传配置（国内稳定上传方案）</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5;">
+          配置后所有文件上传走GitHub，返回raw.githubusercontent.com链接（国内可访问），解决免费上传服务不稳定的问题。<br>
+          <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--primary);">点此创建GitHub Token →</a>（勾选repo权限）
+        </div>
+        <div class="admin-input-row">
+          <span class="api-label" style="width:60px;">启用</span>
+          <select class="admin-input" id="githubEnabled" style="flex:1;">
+            <option value="false">关闭（用免费上传服务）</option>
+            <option value="true">开启（用GitHub上传）</option>
+          </select>
+        </div>
+        <div class="admin-input-row">
+          <span class="api-label" style="width:60px;">Token</span>
+          <input type="password" class="admin-input" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
+        </div>
+        <div class="admin-input-row">
+          <span class="api-label" style="width:60px;">用户名</span>
+          <input type="text" class="admin-input" id="githubUsername" placeholder="你的GitHub用户名">
+        </div>
+        <div class="admin-input-row">
+          <span class="api-label" style="width:60px;">仓库名</span>
+          <input type="text" class="admin-input" id="githubRepo" placeholder="如 ai-dance-uploads">
+        </div>
+        <button class="admin-btn-sm" onclick="saveGithubConfig()">保存GitHub配置</button>
+        <button class="admin-btn-sm gray" onclick="testGithubUpload()" style="margin-left:8px;">测试上传</button>
+        <div id="githubConfigStatus" style="font-size:11px;margin-top:8px;"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -668,6 +700,66 @@ let state = {
 const ADMIN_PASSWORD = 'admin2026'; // 卖家管理密码，卖家自行修改
 const DEFAULT_CODES = ['vip001', 'vip002', 'vip003']; // 默认授权码，卖家可修改
 
+// ============ GitHub上传配置（卖家配置后，上传走GitHub，国内稳定访问） ============
+// 卖家配置说明：
+// 1. 注册GitHub账号，创建一个公开仓库（如 ai-dance-uploads）
+// 2. 生成Personal Access Token（勾选repo权限）
+// 3. 填入下面的配置项
+// 4. 配置后所有文件上传自动走GitHub，返回raw.githubusercontent.com链接（国内可访问）
+// 5. 不配置则使用免费上传服务作为备选
+const GITHUB_UPLOAD = {
+  enabled: false,           // 卖家配置后改为 true
+  token: '',                // GitHub Personal Access Token
+  username: '',             // GitHub用户名
+  repo: '',                 // 仓库名（如 ai-dance-uploads）
+  branch: 'main'            // 分支名
+};
+
+// GitHub上传函数
+async function uploadToGithub(file) {
+  const cfg = getGithubConfig();
+  if (!cfg.enabled || !cfg.token || !cfg.username || !cfg.repo) {
+    return null; // 未配置，返回null让调用方使用备选方案
+  }
+  
+  // 生成文件名（时间戳+随机数+原扩展名）
+  const ext = file.name.includes('.') ? file.name.split('.').pop() : 'mp4';
+  const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 8)}.${ext}`;
+  const path = `uploads/${fileName}`;
+  
+  // 转base64
+  const base64 = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+  
+  // 上传到GitHub
+  const url = `https://api.github.com/repos/${cfg.username}/${cfg.repo}/contents/${path}`;
+  const body = JSON.stringify({
+    message: `upload ${fileName}`,
+    content: base64,
+    branch: cfg.branch
+  });
+  
+  const res = await fetchWithTimeout(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `token ${cfg.token}`,
+      'Content-Type': 'application/json'
+    },
+    body: body
+  }, 30000);
+  
+  if (res.ok) {
+    // 返回raw链接
+    return `https://raw.githubusercontent.com/${cfg.username}/${cfg.repo}/${cfg.branch}/${path}`;
+  }
+  
+  throw new Error('GitHub upload failed: ' + res.status);
+}
+
 // 获取所有授权码（默认 + 自定义）
 function getCodes() {
   const custom = JSON.parse(localStorage.getItem('custom_codes') || '[]');
@@ -719,6 +811,7 @@ function adminLogin() {
     document.getElementById('adminPanel').style.display = 'block';
     renderCodeList();
     updateStats();
+    loadGithubConfig();
   } else {
     document.getElementById('adminError').textContent = '管理密码错误';
   }
@@ -809,6 +902,84 @@ function clearAllCodes() {
   saveCustomCodes([]);
   renderCodeList();
   updateStats();
+}
+
+// ============ GitHub上传配置 ============
+function getGithubConfig() {
+  return {
+    enabled: localStorage.getItem('github_upload_enabled') === 'true',
+    token: localStorage.getItem('github_upload_token') || '',
+    username: localStorage.getItem('github_upload_username') || '',
+    repo: localStorage.getItem('github_upload_repo') || '',
+    branch: localStorage.getItem('github_upload_branch') || 'main'
+  };
+}
+
+function loadGithubConfig() {
+  const cfg = getGithubConfig();
+  document.getElementById('githubEnabled').value = cfg.enabled ? 'true' : 'false';
+  document.getElementById('githubToken').value = cfg.token;
+  document.getElementById('githubUsername').value = cfg.username;
+  document.getElementById('githubRepo').value = cfg.repo;
+  updateGithubConfigStatus();
+}
+
+function saveGithubConfig() {
+  const enabled = document.getElementById('githubEnabled').value;
+  const token = document.getElementById('githubToken').value.trim();
+  const username = document.getElementById('githubUsername').value.trim();
+  const repo = document.getElementById('githubRepo').value.trim();
+  
+  localStorage.setItem('github_upload_enabled', enabled);
+  localStorage.setItem('github_upload_token', token);
+  localStorage.setItem('github_upload_username', username);
+  localStorage.setItem('github_upload_repo', repo);
+  
+  const statusEl = document.getElementById('githubConfigStatus');
+  if (enabled === 'true' && token && username && repo) {
+    statusEl.innerHTML = '<span style="color:var(--success);">✅ GitHub上传已启用，配置已保存</span>';
+  } else if (enabled === 'true') {
+    statusEl.innerHTML = '<span style="color:var(--warning);">⚠️ 已启用但配置不完整，请填写Token、用户名、仓库名</span>';
+  } else {
+    statusEl.innerHTML = '<span style="color:var(--muted);">ℹ️ GitHub上传已关闭，使用免费上传服务</span>';
+  }
+}
+
+function updateGithubConfigStatus() {
+  const cfg = getGithubConfig();
+  const statusEl = document.getElementById('githubConfigStatus');
+  if (cfg.enabled && cfg.token && cfg.username && cfg.repo) {
+    statusEl.innerHTML = `<span style="color:var(--success);">✅ 已启用：${cfg.username}/${cfg.repo}</span>`;
+  } else if (cfg.enabled) {
+    statusEl.innerHTML = '<span style="color:var(--warning);">⚠️ 已启用但配置不完整</span>';
+  }
+}
+
+async function testGithubUpload() {
+  const cfg = getGithubConfig();
+  const statusEl = document.getElementById('githubConfigStatus');
+  
+  if (!cfg.enabled || !cfg.token || !cfg.username || !cfg.repo) {
+    statusEl.innerHTML = '<span style="color:var(--danger);">❌ 请先启用并填写完整配置</span>';
+    return;
+  }
+  
+  statusEl.innerHTML = '<span style="color:var(--muted);">⏳ 正在测试上传...</span>';
+  
+  try {
+    // 创建一个测试文件
+    const testContent = 'GitHub upload test - ' + new Date().toISOString();
+    const testFile = new File([testContent], 'test.txt', { type: 'text/plain' });
+    
+    const url = await uploadToGithub(testFile);
+    if (url) {
+      statusEl.innerHTML = `<span style="color:var(--success);">✅ 测试成功！文件地址：${url}</span>`;
+    } else {
+      statusEl.innerHTML = '<span style="color:var(--danger);">❌ 上传失败，请检查配置</span>';
+    }
+  } catch (err) {
+    statusEl.innerHTML = `<span style="color:var(--danger);">❌ 测试失败：${err.message}</span>`;
+  }
 }
 
 // ============ 初始化 ============
@@ -1067,6 +1238,22 @@ function updateCost() {
 // ============ 多服务并行上传（国内优化版v2） ============
 async function uploadToCatbox(file) {
   const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
+  
+  // 优先使用GitHub上传（如果卖家配置了，国内稳定访问）
+  const ghCfg = getGithubConfig();
+  if (ghCfg.enabled && ghCfg.token) {
+    try {
+      console.log('使用GitHub上传...');
+      const githubUrl = await uploadToGithub(file);
+      if (githubUrl) {
+        console.log('GitHub上传成功:', githubUrl);
+        return githubUrl;
+      }
+    } catch (err) {
+      console.warn('GitHub上传失败，尝试免费服务:', err.message);
+    }
+  }
+  
   const UPLOAD_TIMEOUT = 15000; // 单个服务15秒超时，快速失败
   
   // 定义所有上传服务（按国内可达性排序，国内相对稳定的放前面）
